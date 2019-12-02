@@ -24,8 +24,10 @@ class SchedDomain():
         return self.span
 
 
-with open('/proc/schedstat', 'r') as f:
-    lines = f.readlines()[2:]
+if __name__ == '__main__':
+    with open('/proc/schedstat', 'r') as f:
+        lines = f.readlines()[2:]
+
     curr = []
     cpus = {}
     cpu = None
@@ -42,7 +44,6 @@ with open('/proc/schedstat', 'r') as f:
     if cpu:
         cpus[cpu] = curr
 
-    print(cpus)
     domains = {}
     for cpu, spans in cpus.items():
         last = None
