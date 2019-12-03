@@ -2,4 +2,4 @@
 kernel="/home/jingde/linux-source-4.18.0/arch/x86/boot/bzImage"
 image="/home/jingde/work/qemu-img.qcow2"
 image="/home/jingde/work/qemu-image.img"
-sudo qemu-system-x86_64 -kernel $kernel -nographic -hda $image -append "root=/dev/sda rw console=ttyS0" -k en-us --enable-kvm -smp cpus=4 -cpu host
+sudo qemu-system-x86_64 -kernel $kernel -nographic -hda $image -append "root=/dev/sda rw console=ttyS0" -k en-us --enable-kvm -smp cpus=4 -cpu host -m 512
