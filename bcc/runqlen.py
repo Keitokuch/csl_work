@@ -18,7 +18,7 @@ b.attach_perf_event(ev_type=PerfType.SOFTWARE,
 
 def handler(cpu, data, size):
     event = b['events'].event(data)
-    print(event.cpu, event.h_nr_running, event.runnable_weight, event.weight)
+    print(event.pid, event.cpu, event.h_nr_running, event.runnable_weight, event.weight)
 
 print("Sampling run queue length... Hit Ctrl-C to end.")
 
