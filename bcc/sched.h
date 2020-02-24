@@ -1,4 +1,5 @@
 #include <linux/sched.h>
+#include <linux/sched/idle.h>
 #include <linux/stop_machine.h>
 // #define CONFIG_NUMA_BALANCING y
 // #define CONFIG_NO_HZ_COMMON y
@@ -11,6 +12,34 @@
 // #define CONFIG_SCHED_HRTICK y
 // #define CONFIG_SCHEDSTATS y
 // #define CONFIG_CPU_IDLE y
+
+enum fbq_type { regular, remote, all };
+
+struct lb_env {
+	struct sched_domain	*sd;
+
+	struct rq		*src_rq;
+	int			src_cpu;
+
+	int			dst_cpu;
+	struct rq		*dst_rq;
+
+	struct cpumask		*dst_grpmask;
+	int			new_dst_cpu;
+	enum cpu_idle_type	idle;
+	long			imbalance;
+	/* The set of CPUs under consideration for load-balancing */
+	struct cpumask		*cpus;
+
+	unsigned int		flags;
+
+	unsigned int		loop;
+	unsigned int		loop_break;
+	unsigned int		loop_max;
+
+	enum fbq_type		fbq_type;
+	struct list_head	tasks;
+};
 
 struct rt_prio_array {
 	DECLARE_BITMAP(bitmap, MAX_RT_PRIO+1); /* include 1 bit for delimiter */
@@ -354,3 +383,4 @@ struct rq {
 	struct cpuidle_state *idle_state;
 #endif
 };
+
