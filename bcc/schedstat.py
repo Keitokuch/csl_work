@@ -14,6 +14,7 @@ b = BPF(src_file='schedstat.c')
 #  b.attach_kretprobe(event="enqueue_task_fair", fn_name="trace_rq")
 #  b.attach_kretprobe(event="dequeue_task_fair", fn_name="trace_rq")
 
+times = []
 #  b.attach_kprobe(event="perf_event_exit_task", fn_name="trace_exit")
 
 # perf buffer callbacks
@@ -21,6 +22,7 @@ def cs_handler(cpu, data, size):
     event = b['cs_events'].event(data)
     pids = event.pids[:event.pid_cnt]
     weights = event.weights[:event.pid_cnt]
+    times.append(event.ts)
     print(event.ts, cpu, 'cs', event.p_pid, 'to', event.n_pid, event.comm, event.len, event.pid_cnt,
           'prev', event.curr_pid, 'state', event.prev_state, pids, weights)
 
@@ -39,6 +41,7 @@ def eq_handler(cpu, data, size):
     event = b['eq_events'].event(data)
     pids = event.pids[:event.pid_cnt]
     weights = event.weights[:event.pid_cnt]
+    times.append(event.ts)
     print(event.ts, event.qc_cpu, 'eq', event.qc_pid, 'state', event.qc_flags, event.len, event.pid_cnt, event.runnable_weight,
           event.curr_pid, event.comm, pids, weights, f'qc{event.qc_len}', event.before_len)
     #  print(event.qc_len)
@@ -48,6 +51,7 @@ def dq_handler(cpu, data, size):
     event = b['dq_events'].event(data)
     pids = event.pids[:event.pid_cnt]
     weights = event.weights[:event.pid_cnt]
+    times.append(event.ts)
     print(event.ts, event.qc_cpu, 'dq', event.qc_pid, 'state', event.qc_flags, event.len, event.pid_cnt, event.runnable_weight,
           event.curr_pid, event.comm, pids, weights, f'qc{event.qc_len}', event.before_len)
     #  print(event.qc_len)
@@ -70,10 +74,10 @@ def locality_handler(cpu, data, size):
 
 
 # set up perf buffers
-b['lb_events'].open_perf_buffer(lb_handler)
+#  b['lb_events'].open_perf_buffer(lb_handler)
 b['dq_events'].open_perf_buffer(dq_handler)
 b['eq_events'].open_perf_buffer(eq_handler)
-#  b['cs_events'].open_perf_buffer(cs_handler)
+b['cs_events'].open_perf_buffer(cs_handler)
 #  b['tn_events'].open_perf_buffer(tn_handler)
 #  b['td_events'].open_perf_buffer(td_handler)
 #  b['locality_events'].open_perf_buffer(locality_handler)
@@ -85,13 +89,20 @@ b['eq_events'].open_perf_buffer(eq_handler)
 import warnings
 ready = 0
 b.perf_buffer_poll()
+lt = 0
 while True:
     #  for _ in range(10000):
     try:
         b.perf_buffer_poll()
+        times = sorted(times)
+        ft = times[0]
+        if ft < lt:
+            print("decreasing time", ft, lt)
+        lt = times[-1]
     except KeyboardInterrupt:
         exit()
     if not ready:
         warnings.warn('ready')
         ready = 1
+    times = []
     print('==')
