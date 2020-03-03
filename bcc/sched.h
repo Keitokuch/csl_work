@@ -13,6 +13,9 @@
 // #define CONFIG_SCHEDSTATS y
 // #define CONFIG_CPU_IDLE y
 
+#define __per_cpu_offset(__cpu) \
+      (trap_block[(__cpu)].__per_cpu_base)
+
 enum fbq_type { regular, remote, all };
 
 struct lb_env {
@@ -44,6 +47,14 @@ struct lb_env {
 struct rt_prio_array {
 	DECLARE_BITMAP(bitmap, MAX_RT_PRIO+1); /* include 1 bit for delimiter */
 	struct list_head queue[MAX_RT_PRIO];
+};
+
+/* The regions in numa_faults array from task_struct */
+enum numa_faults_stats {
+	NUMA_MEM = 0,
+	NUMA_CPU,
+	NUMA_MEMBUF,
+	NUMA_CPUBUF
 };
 
 struct rq_flags {
