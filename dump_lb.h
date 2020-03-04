@@ -44,7 +44,7 @@ struct rq_data {
     unsigned long weights[NR_PIDS];
 };
 
-struct lb_data {
+struct migrate_data {
     u64 ts;
     u64 instance_ts;
     int cpu;
@@ -52,7 +52,6 @@ struct lb_data {
     int src_cpu;
     int pid;
     long imbalance;
-    int can_migrate;
     int numa_preferred_nid;
     unsigned int src_nr_running;
     unsigned int src_nr_numa_running;
@@ -62,6 +61,7 @@ struct lb_data {
     unsigned int p_policy;
     int p_running;
     unsigned long p_numa_faults[NR_NODES];
+    int can_migrate;
 };
 
 struct lb_ret_data {
@@ -77,4 +77,12 @@ struct lb_context {
     int cpu;
     struct task_struct *p;
     struct lb_env *env;
+};
+
+struct can_migrate_context {
+    u64 ts;
+    int cpu;
+    struct task_struct *p;
+    struct lb_env *env;
+    struct migrate_data data;
 };

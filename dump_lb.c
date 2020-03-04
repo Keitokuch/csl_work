@@ -12,6 +12,7 @@
 #include <linux/smp.h>
 #include <linux/percpu-defs.h>
 #include <uapi/linux/bpf.h>
+#include <linux/jump_label.h>
 
 #include "dump_lb.h"
 
@@ -40,6 +41,35 @@
 #define _KRETPROBE(fn) kretprobe__##fn
 
 
+static inline bool cfs_bandwidth_used(void)
+{
+    /* return static_key_false(&__cfs_bandwidth_used); */
+    return true;
+}
+
+/* check whether cfs_rq, or any parent, is throttled */
+static inline int throttled_hierarchy(struct cfs_rq *cfs_rq)
+{
+    return cfs_bandwidth_used() && cfs_rq->throttle_count;
+}
+
+/*
+ * Ensure that neither of the group entities corresponding to src_cpu or
+ * dest_cpu are members of a throttled hierarchy when performing group
+ * load-balance operations.
+ */
+static inline int throttled_lb_pair(struct task_group *tg,
+				    int src_cpu, int dest_cpu)
+{
+	struct cfs_rq *src_cfs_rq, *dest_cfs_rq;
+
+	src_cfs_rq = tg->cfs_rq[src_cpu];
+	dest_cfs_rq = tg->cfs_rq[dest_cpu];
+
+	return throttled_hierarchy(src_cfs_rq) ||
+	       throttled_hierarchy(dest_cfs_rq);
+}
+
 static inline int task_faults_idx(enum numa_faults_stats s, int nid, int priv)
 {
 	return NR_NUMA_HINT_FAULT_TYPES * (s * nr_node_ids + nid) + priv;
@@ -56,6 +86,7 @@ static inline unsigned long task_faults(struct task_struct *p, int nid)
 
 
 BPF_HASH(lb_instances, int, struct lb_context);
+BPF_HASH(can_migrate_instances, int, struct can_migrate_context);
 
 BPF_PERF_OUTPUT(dq_events);
 BPF_PERF_OUTPUT(eq_events);
@@ -133,49 +164,54 @@ int (load_balance) (struct pt_regs *ctx, int this_cpu, struct rq *this_rq,
 
 int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct lb_env *env)
 {
-    struct lb_data lb_data = {};
+    struct migrate_data data = {};
     struct rq *src_rq = env->src_rq;
     struct rq *dst_rq = env->dst_rq;
-    struct lb_context lb_context = {};
+    struct can_migrate_context context = {};
     int cpu = bpf_get_smp_processor_id();
     u64 ts = bpf_ktime_get_ns();
 
-    if (throttled_lb_pair(task_group(p), env->src_cpu, env->dst_cpu);
+    if (throttled_lb_pair(p->sched_task_group, env->src_cpu, env->dst_cpu))
+        return 0;
 
     if (!cpumask_test_cpu(env->dst_cpu, &p->cpus_allowed))
-		ts = 100;
+        return 0;
 
-    lb_context.ts = ts;
-    lb_context.cpu = cpu;
-    lb_context.p = p;
-    lb_context.env = env;
-    lb_instances.update(&cpu, &lb_context);
+    if (p->on_cpu)
+        return 0;
 
-    lb_data.ts = ts;
-    lb_data.instance_ts = ts;
+    data.ts = ts;
+    data.instance_ts = ts;
 
-    lb_data.src_cpu = env->src_cpu;
-    lb_data.dst_cpu = env->dst_cpu;
-    lb_data.imbalance = env->imbalance;
-    lb_data.env_idle = env->idle;
+    data.src_cpu = env->src_cpu;
+    data.dst_cpu = env->dst_cpu;
+    data.imbalance = env->imbalance;
+    data.env_idle = env->idle;
 
-    lb_data.pid = p->pid;
-    lb_data.numa_preferred_nid = p->numa_preferred_nid;
-    lb_data.p_policy = p->policy;
-    lb_data.p_running = p->on_cpu;
+    data.pid = p->pid;
+    data.numa_preferred_nid = p->numa_preferred_nid;
+    data.p_policy = p->policy;
+    data.p_running = p->on_cpu;
 
-    lb_data.src_nr_running = src_rq->nr_running;
-    lb_data.src_nr_numa_running = src_rq->nr_numa_running;
-    lb_data.src_nr_preferred_running = src_rq->nr_preferred_running;
+    data.src_nr_running = src_rq->nr_running;
+    data.src_nr_numa_running = src_rq->nr_numa_running;
+    data.src_nr_preferred_running = src_rq->nr_preferred_running;
 
-    lb_data.delta = src_rq->clock_task - p->se.exec_start;
+    data.delta = src_rq->clock_task - p->se.exec_start;
 
     int n;
     for (n = 0; n < NR_NODES; n++) {
-        lb_data.p_numa_faults[n] = task_faults(p, n);
+        data.p_numa_faults[n] = task_faults(p, n);
     }
 
-    lb_env_events.perf_submit(ctx, &lb_data, sizeof(lb_data));
+    /* lb_env_events.perf_submit(ctx, &data, sizeof(data)); */
+    context.ts = ts;
+    context.cpu = cpu;
+    context.p = p;
+    context.env = env;
+    context.data = data;
+    
+    can_migrate_instances.update(&cpu, &context);
 
     return 0;
 }
@@ -184,25 +220,29 @@ int KRETPROBE(can_migrate_task) (struct pt_regs *ctx)
 {
     struct task_struct *p;
     struct lb_env *env;
-    struct lb_ret_data lb_ret_data = {};
-    struct lb_context *context;
+    struct migrate_data *data_p;
+    struct can_migrate_context *context;
     int cpu = bpf_get_smp_processor_id();
     int ret = PT_REGS_RC(ctx);
 
-    lb_ret_data.ts = bpf_ktime_get_ns();
+    /* lb_ret_data.ts = bpf_ktime_get_ns(); */
 
-    context = (struct lb_context *)lb_instances.lookup(&cpu);
+    context = (struct can_migrate_context *)can_migrate_instances.lookup(&cpu);
     if (!context)
         return 0;
+    can_migrate_instances.delete(&cpu);
 
-    lb_ret_data.instance_ts = context->ts;
-    p = context->p;
-    env = context->env;
+    data_p = &context->data;
+    /* lb_ret_data.instance_ts = context->ts; */
+    /* p = context->p; */
+    /* env = context->env; */
 
-    lb_ret_data.pid = p->pid;
-    lb_ret_data.dst_cpu = env->dst_cpu;
-    lb_ret_data.can_migrate = ret;
+    /* lb_ret_data.pid = p->pid; */
+    /* lb_ret_data.dst_cpu = env->dst_cpu; */
+    /* lb_ret_data.can_migrate = ret; */
+    data_p->can_migrate = ret;
 
-    can_migrate_events.perf_submit(ctx, &lb_ret_data, sizeof(lb_ret_data));
+    /* can_migrate_events.perf_submit(ctx, &lb_ret_data, sizeof(lb_ret_data)); */
+    can_migrate_events.perf_submit(ctx, data_p, sizeof(*data_p));
     return 0;
 }

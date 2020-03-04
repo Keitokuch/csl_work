@@ -18,6 +18,66 @@
 
 enum fbq_type { regular, remote, all };
 
+struct cfs_bandwidth {
+#ifdef CONFIG_CFS_BANDWIDTH
+	raw_spinlock_t lock;
+	ktime_t period;
+	u64 quota, runtime;
+	s64 hierarchical_quota;
+	u64 runtime_expires;
+
+	int idle, period_active;
+	struct hrtimer period_timer, slack_timer;
+	struct list_head throttled_cfs_rq;
+
+	/* statistics */
+	int nr_periods, nr_throttled;
+	u64 throttled_time;
+#endif
+};
+
+/* Task group related information */
+struct task_group {
+	struct cgroup_subsys_state css;
+
+#ifdef CONFIG_FAIR_GROUP_SCHED
+	/* schedulable entities of this group on each CPU */
+	struct sched_entity	**se;
+	/* runqueue "owned" by this group on each CPU */
+	struct cfs_rq		**cfs_rq;
+	unsigned long		shares;
+
+#ifdef	CONFIG_SMP
+	/*
+	 * load_avg can be heavily contended at clock tick time, so put
+	 * it in its own cacheline separated from the fields above which
+	 * will also be accessed at each tick.
+	 */
+	atomic_long_t		load_avg ____cacheline_aligned;
+#endif
+#endif
+
+#ifdef CONFIG_RT_GROUP_SCHED
+	struct sched_rt_entity	**rt_se;
+	struct rt_rq		**rt_rq;
+
+	struct rt_bandwidth	rt_bandwidth;
+#endif
+
+	struct rcu_head		rcu;
+	struct list_head	list;
+
+	struct task_group	*parent;
+	struct list_head	siblings;
+	struct list_head	children;
+
+#ifdef CONFIG_SCHED_AUTOGROUP
+	struct autogroup	*autogroup;
+#endif
+
+	struct cfs_bandwidth	cfs_bandwidth;
+};
+
 struct lb_env {
 	struct sched_domain	*sd;
 
@@ -394,4 +454,5 @@ struct rq {
 	struct cpuidle_state *idle_state;
 #endif
 };
+
 
