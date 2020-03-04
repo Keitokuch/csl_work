@@ -45,8 +45,8 @@ class LoadBalanceContext(DataSource):
 
 class CanMigrateData(DataSource):
     def __init__(self):
-        columns = ['ts', 'pid', 'src_cpu', 'dst_cpu', 'imbalance', 
-                   'prefer_src_node', 'prefer_dst_node', 'same_node', 'delta', 
+        columns = ['ts', 'pid', 'src_cpu', 'dst_cpu', 'imbalance',
+                   'prefer_src_node', 'prefer_dst_node', 'same_node', 'delta',
                    'delta_faults', 'can_migrate']
         self.df = pd.DataFrame(columns=columns)
         self.df.set_index('ts', inplace=True)
@@ -65,7 +65,7 @@ class CanMigrateData(DataSource):
         dst_faults = event.p_numa_faults[dst_nid]
         delta_faults = dst_faults - src_faults
         imbalance = event.imbalance
-        row = [event.pid, src_cpu, dst_cpu, imbalance, 
+        row = [event.pid, src_cpu, dst_cpu, imbalance,
                prefer_src, prefer_dst, same_node, event.delta,
                delta_faults, event.can_migrate]
         self.df.loc[ts] = row
@@ -79,6 +79,8 @@ class CanMigrateData(DataSource):
             return self.na
 
     def dump(self):
+        #  return self.df
+        self.df.to_csv('output.csv')
         return self.df
 
 #  lb_context = LoadBalanceContext()
