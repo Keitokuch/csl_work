@@ -13,17 +13,7 @@
 #include <linux/percpu-defs.h>
 #include <uapi/linux/bpf.h>
 
-#include "sched.h"
-
-#ifdef CONFIG_X86_64
-#define BOOT_PERCPU_OFFSET ((unsigned long)__per_cpu_load)
-#else
-#define BOOT_PERCPU_OFFSET 0
-#endif
-
-unsigned long __per_cpu_offset[NR_CPUS] = {
-	[0 ... NR_CPUS-1] = BOOT_PERCPU_OFFSET,
-};
+#include "dump_lb.h"
 
 /* ====== NUMA related ====== */
 /* Shared or private faults. */
@@ -42,95 +32,12 @@ unsigned long __per_cpu_offset[NR_CPUS] = {
 #define container_of(ptr, type, member) ({				\
     ((type *)((void *)(ptr) - offsetof(type, member))); })
 
-#define NR_LOOPS 7
-#define DUMPS_PER_LOOP 2
-#define NR_PIDS  (NR_LOOPS * DUMPS_PER_LOOP)  
-
-#define EQ_FN enqueue_task_fair
-#define DQ_FN dequeue_task_fair
 
 #define KPROBE(fn)  _KPROBE(fn)
 #define _KPROBE(fn) kprobe__##fn
 #define KRETPROBE(fn)  _KRETPROBE(fn)
 #define _KRETPROBE(fn) kretprobe__##fn
 
-struct cs_data {
-    u64 ts;
-    int cpu;
-    int p_pid;
-    int n_pid;
-    long prev_state;
-    char comm[TASK_COMM_LEN];
-    unsigned int len;
-    int curr_pid;
-    unsigned long runnable_weight;
-    int pid_cnt;
-    int pids[NR_PIDS];
-    unsigned long weights[NR_PIDS];
-};
-
-struct tsk_data {
-    u64 ts;
-    int cpu;
-    int pid;
-    char comm[TASK_COMM_LEN];
-    int prio;
-    unsigned long runnable_weight;
-    char oldcomm[TASK_COMM_LEN];
-};
-
-struct qc_data {
-    u64 ts;
-    int pid;
-    int cpu;
-    int flags;
-    int qc;
-    char comm[TASK_COMM_LEN];
-    unsigned long runnable_weight;
-};
-
-struct rq_data {
-    u64 ts;
-    u64 instance_ts;
-    int cpu;
-    int curr_pid;
-    char comm[TASK_COMM_LEN];
-    unsigned int h_nr_running;
-    unsigned long runnable_weight;
-    int pid_cnt;
-    int pids[NR_PIDS];
-    unsigned long weights[NR_PIDS];
-};
-
-
-struct lb_data {
-    u64 ts;
-    u64 instance_ts;
-    int cpu;
-    int dst_cpu;
-    int src_cpu;
-    int pid;
-    long imbalance;
-    int can_migrate;
-};
-
-struct rq_change {
-    struct rq *rq;
-    struct task_struct *p;
-    int prev_len;
-    int flags;
-};
-
-struct migrate_param {
-    struct task_struct *p;
-    struct lb_env *env;
-    u64 instance_ts;
-};
-
-struct lb_context {
-    u64 ts;
-    int cpu;
-};
 
 static inline int task_faults_idx(enum numa_faults_stats s, int nid, int priv)
 {
@@ -147,8 +54,7 @@ static inline unsigned long task_faults(struct task_struct *p, int nid)
 }
 
 
-BPF_HASH(lb_instance, int, struct lb_context);
-BPF_HASH(lb_migrate, int, struct migrate_param);
+BPF_HASH(lb_instances, int, struct lb_context);
 
 BPF_PERF_OUTPUT(dq_events);
 BPF_PERF_OUTPUT(eq_events);
@@ -201,8 +107,10 @@ static void dump_rq(struct rq_data *data, struct rq *rq) {
     data->pid_cnt = j;
 }
 
+#define EQ_FN enqueue_task_fair
+#define DQ_FN dequeue_task_fair
 
-int KPROBE(load_balance) (struct pt_regs *ctx, int this_cpu, struct rq *this_rq,
+int (load_balance) (struct pt_regs *ctx, int this_cpu, struct rq *this_rq,
 			struct sched_domain *sd, enum cpu_idle_type idle,
 			int *continue_balancing)
 {
@@ -217,7 +125,7 @@ int KPROBE(load_balance) (struct pt_regs *ctx, int this_cpu, struct rq *this_rq,
 
     dump_rq(&rq_data, this_rq);
     lb_dst_events.perf_submit(ctx, &rq_data, sizeof(rq_data));
-    lb_instance.update(&cpu, &lb_context);
+    lb_instances.update(&cpu, &lb_context);
 
     return 0;
 }
@@ -225,62 +133,65 @@ int KPROBE(load_balance) (struct pt_regs *ctx, int this_cpu, struct rq *this_rq,
 int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct lb_env *env)
 {
     struct lb_data lb_data = {};
-    struct rq_data rq_data = {};
     struct rq *src_rq = env->src_rq;
-    struct lb_context *lb_context;
+    struct rq *dst_rq = env->dst_rq;
+    struct lb_context lb_context = {};
     int cpu = bpf_get_smp_processor_id();
     u64 ts = bpf_ktime_get_ns();
 
+    lb_context.ts = ts;
+    lb_context.cpu = cpu;
+    lb_context.p = p;
+    lb_context.env = env;
+    lb_instances.update(&cpu, &lb_context);
+
     lb_data.ts = ts;
+    lb_data.instance_ts = ts;
+
     lb_data.src_cpu = env->src_cpu;
     lb_data.dst_cpu = env->dst_cpu;
-
-    lb_context = (struct lb_context *)lb_instance.lookup(&cpu);
-    if (!lb_context)
-        return 0;
-
-    lb_data.instance_ts = lb_context->ts;
     lb_data.imbalance = env->imbalance;
+    lb_data.env_idle = env->idle;
+
+    lb_data.pid = p->pid;
+    lb_data.numa_preferred_nid = p->numa_preferred_nid;
+    lb_data.p_policy = p->policy;
+    lb_data.p_running = p->on_cpu;
+
+    lb_data.src_nr_running = src_rq->nr_running;
+    lb_data.src_nr_numa_running = src_rq->nr_numa_running;
+    lb_data.src_nr_preferred_running = src_rq->nr_preferred_running;
+
+    lb_data.delta = src_rq->clock_task - p->se.exec_start;
 
     lb_env_events.perf_submit(ctx, &lb_data, sizeof(lb_data));
-
-    rq_data.ts = ts;
-    rq_data.instance_ts = lb_context->ts;
-    dump_rq(&rq_data, src_rq);
-    lb_src_events.perf_submit(ctx, &rq_data, sizeof(rq_data));
-
-    struct migrate_param param = {};
-    param.p = p;
-    param.env = env;
-    param.instance_ts = lb_context->ts;
-    lb_migrate.update(&cpu, &param);
 
     return 0;
 }
 
 int KRETPROBE(can_migrate_task) (struct pt_regs *ctx)
 {
-    struct migrate_param *param;
     struct task_struct *p;
     struct lb_env *env;
-    struct lb_data lb_data = {};
+    struct lb_ret_data lb_ret_data = {};
+    struct lb_context *context;
     int cpu = bpf_get_smp_processor_id();
     int ret = PT_REGS_RC(ctx);
 
-    lb_data.ts = bpf_ktime_get_ns();
+    lb_ret_data.ts = bpf_ktime_get_ns();
 
-    param = (struct migrate_param *)lb_migrate.lookup(&cpu);
-    if (!param)
+    context = (struct lb_context *)lb_instances.lookup(&cpu);
+    if (!context)
         return 0;
 
-    lb_data.instance_ts = param->instance_ts;
-    p = param->p;
-    env = param->env;
+    lb_ret_data.instance_ts = context->ts;
+    p = context->p;
+    env = context->env;
 
-    lb_data.pid = p->pid;
-    lb_data.dst_cpu = env->dst_cpu;
-    lb_data.can_migrate = ret;
+    lb_ret_data.pid = p->pid;
+    lb_ret_data.dst_cpu = env->dst_cpu;
+    lb_ret_data.can_migrate = ret;
 
-    can_migrate_events.perf_submit(ctx, &lb_data, sizeof(lb_data));
+    can_migrate_events.perf_submit(ctx, &lb_ret_data, sizeof(lb_ret_data));
     return 0;
 }
