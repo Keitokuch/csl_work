@@ -33,10 +33,10 @@ if __name__ == '__main__':
     cpu = None
     for line in lines:
         if line[:3] == 'cpu':
-            if cpu:
+            if cpu != None:
                 cpus[cpu] = curr
                 curr = []
-            cpu = line[:4]
+            cpu = int(line.split(' ')[0][3:])
         elif line[:6] == 'domain':
             curr.append(line.split(' ')[1])
         else:
