@@ -4,7 +4,10 @@ NUMA_PATH='/sys/devices/system/node/'
 with open(NUMA_PATH+'possible') as f:
     line = f.readlines()[0].strip()
     node_range = list(map(int, line.split('-')))
-    node_list = range(node_range[0], node_range[1] + 1)
+    if len(node_range) == 1:
+        node_list = range(node_range[0] + 1)
+    else:
+        node_list = range(node_range[0], node_range[1] + 1)
 
 node_cpulist = {}
 for node in node_list:
@@ -22,5 +25,6 @@ for node, cpulist in node_cpulist.items():
     for cpu in cpulist:
         cpu_nodemap[cpu] = node
 
-print(node_cpulist)
-print(cpu_nodemap)
+if __name__ == "__main__":
+    print(node_cpulist)
+    print(cpu_nodemap)
