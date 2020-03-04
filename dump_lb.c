@@ -15,6 +15,7 @@
 
 #include "dump_lb.h"
 
+
 /* ====== NUMA related ====== */
 /* Shared or private faults. */
 #define NR_NUMA_HINT_FAULT_TYPES 2
@@ -139,6 +140,11 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     int cpu = bpf_get_smp_processor_id();
     u64 ts = bpf_ktime_get_ns();
 
+    if (throttled_lb_pair(task_group(p), env->src_cpu, env->dst_cpu);
+
+    if (!cpumask_test_cpu(env->dst_cpu, &p->cpus_allowed))
+		ts = 100;
+
     lb_context.ts = ts;
     lb_context.cpu = cpu;
     lb_context.p = p;
@@ -163,6 +169,11 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     lb_data.src_nr_preferred_running = src_rq->nr_preferred_running;
 
     lb_data.delta = src_rq->clock_task - p->se.exec_start;
+
+    int n;
+    for (n = 0; n < NR_NODES; n++) {
+        lb_data.p_numa_faults[n] = task_faults(p, n);
+    }
 
     lb_env_events.perf_submit(ctx, &lb_data, sizeof(lb_data));
 

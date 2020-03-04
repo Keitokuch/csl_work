@@ -5,6 +5,8 @@ import sys
 
 from datasource import lb_context
 
+NR_NODES=2
+
 # initialize BPF & probes
 b = BPF(src_file='dump_lb.c')
 #  b.attach_kprobe(event="can_migrate_task", fn_name="test_func")
@@ -25,9 +27,11 @@ def lb_src_handler(cpu, data, size):
 def lb_env_handler(cpu, data, size):
     event = b['lb_env_events'].event(data)
     #  lb_context.update(event)
+    task_faults = event.p_numa_faults[:NR_NODES]
     print(event.instance_ts, 'try_migrate', event.pid, event.src_cpu, 'to', event.dst_cpu, event.imbalance, event.env_idle)
     print('            p', event.delta, event.numa_preferred_nid, event.p_policy, event.p_running)
     print('         lens', event.src_nr_running, event.src_nr_numa_running, event.src_nr_preferred_running)
+    print('       faults', task_faults)
 
 
 def can_migrate_handler(cpu, data, size):

@@ -4,6 +4,8 @@
 #define DUMPS_PER_LOOP 2
 #define NR_PIDS  (NR_LOOPS * DUMPS_PER_LOOP)  
 
+#define NR_NODES 2
+
 struct cs_data {
     u64 ts;
     int cpu;
@@ -59,6 +61,7 @@ struct lb_data {
     s64 delta;
     unsigned int p_policy;
     int p_running;
+    unsigned long p_numa_faults[NR_NODES];
 };
 
 struct lb_ret_data {
