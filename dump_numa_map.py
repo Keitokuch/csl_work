@@ -5,13 +5,13 @@ with open(NUMA_PATH+'possible') as f:
     line = f.readlines()[0].strip()
     node_range = list(map(int, line.split('-')))
     if len(node_range) == 1:
-        node_list = range(node_range[0] + 1)
+        node_list = [node_range[0]]
     else:
         node_list = range(node_range[0], node_range[1] + 1)
 
 node_cpulist = {}
 for node in node_list:
-    node_dir = NUMA_PATH + f'node{str(node)}/'
+    node_dir = NUMA_PATH + f'node{node}/'
     node_cpulist[node] = []
     with open(node_dir + 'cpulist') as f:
         line = f.readlines()[0].strip()
