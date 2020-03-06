@@ -13,6 +13,7 @@
 #include <linux/percpu-defs.h>
 #include <uapi/linux/bpf.h>
 #include <linux/jump_label.h>
+#include <linux/rcupdate.h>
 
 #include "dump_lb.h"
 
@@ -200,9 +201,11 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     data.delta = src_rq->clock_task - p->se.exec_start;
 
     int n;
-    for (n = 0; n < NR_NODES; n++) {
-        data.p_numa_faults[n] = task_faults(p, n);
-    }
+    /* for (n = 0; n < NR_NODES; n++) { */
+        /* data.p_numa_faults[n] = task_faults(p, n+2); */
+    /* } */
+    data.p_numa_faults[0] = task_faults(p, 1);
+    data.p_numa_faults[1] = task_faults(p, 2);
 
     /* lb_env_events.perf_submit(ctx, &data, sizeof(data)); */
     context.ts = ts;
