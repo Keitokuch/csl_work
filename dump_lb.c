@@ -13,7 +13,7 @@
 #include <linux/percpu-defs.h>
 #include <uapi/linux/bpf.h>
 #include <linux/jump_label.h>
-#include <linux/rcupdate.h>
+#include <linux/nodemask.h>
 
 #include "dump_lb.h"
 
@@ -74,6 +74,15 @@ static inline int throttled_lb_pair(struct task_group *tg,
 static inline int task_faults_idx(enum numa_faults_stats s, int nid, int priv)
 {
 	return NR_NUMA_HINT_FAULT_TYPES * (s * nr_node_ids + nid) + priv;
+}
+
+static inline unsigned long group_faults(struct task_struct *p, int nid)
+{
+	if (!p->numa_group)
+		return 0;
+
+	return p->numa_group->faults[task_faults_idx(NUMA_MEM, nid, 0)] +
+		p->numa_group->faults[task_faults_idx(NUMA_MEM, nid, 1)];
 }
 
 static inline unsigned long task_faults(struct task_struct *p, int nid)
@@ -204,8 +213,9 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     /* for (n = 0; n < NR_NODES; n++) { */
         /* data.p_numa_faults[n] = task_faults(p, n+2); */
     /* } */
-    data.p_numa_faults[0] = task_faults(p, 1);
-    data.p_numa_faults[1] = task_faults(p, 2);
+    data.p_numa_faults[0] = group_faults(p, 0);
+    data.p_numa_faults[1] = group_faults(p, 1);
+
 
     /* lb_env_events.perf_submit(ctx, &data, sizeof(data)); */
     context.ts = ts;
