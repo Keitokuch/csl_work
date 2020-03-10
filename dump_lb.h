@@ -56,12 +56,20 @@ struct migrate_data {
     unsigned int src_nr_running;
     unsigned int src_nr_numa_running;
     unsigned int src_nr_preferred_running;
-    int env_idle;
+    int cpu_idle;
+    int cpu_not_idle;
+    int cpu_newly_idle;
+    unsigned int nr_balance_failed;
+    unsigned int cache_nice_tries;
     s64 delta;
-    unsigned int p_policy;
-    int p_running;
+    // unsigned int p_policy;
+    // int p_running;
     unsigned long p_numa_faults[NR_NODES];
+    // unsigned long f_test[9];
+    unsigned long total_numa_faults;
     int can_migrate;
+
+    s64 sysctl_migrate_cost;
 };
 
 struct lb_ret_data {
