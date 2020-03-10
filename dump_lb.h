@@ -80,13 +80,6 @@ struct lb_ret_data {
     int can_migrate;
 };
 
-struct lb_context {
-    u64 ts;
-    int cpu;
-    struct task_struct *p;
-    struct lb_env *env;
-};
-
 struct can_migrate_context {
     u64 ts;
     int cpu;

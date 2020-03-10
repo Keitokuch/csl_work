@@ -6,27 +6,13 @@ import logging
 
 from datasource import CanMigrateData
 
-NR_NODES=2
 
 cm_events = []
-can_migrate_datasource = CanMigrateData(append=True, write_size=1000, write_file='list_dump.csv')
+can_migrate_datasource = CanMigrateData(append=True, write_size=1000,
+                                        write_file='output.csv')
 
 # initialize BPF & probes
 b = BPF(src_file='dump_lb.c')
-#  b.attach_kprobe(event="can_migrate_task", fn_name="test_func")
-
-# perf buffer callbacks
-def lb_dst_handler(cpu, data, size):
-    event = b['lb_dst_events'].event(data)
-    pids = event.pids[:event.pid_cnt]
-    #  print(event.instance_ts, 'lb_dst', event.cpu, event.h_nr_running,
-          #  event.pid_cnt, event.runnable_weight, pids)
-
-def lb_src_handler(cpu, data, size):
-    event = b['lb_src_events'].event(data)
-    pids = event.pids[:event.pid_cnt]
-    #  print(event.instance_ts, 'lb_src', event.cpu, event.h_nr_running,
-          #  event.pid_cnt, event.runnable_weight, pids)
 
 
 def can_migrate_handler(cpu, data, size):

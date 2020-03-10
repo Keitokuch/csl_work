@@ -9,6 +9,7 @@ with open(NUMA_PATH+'possible') as f:
     else:
         node_list = range(node_range[0], node_range[1] + 1)
 
+NR_NODES = len(node_list)
 node_cpulist = {}
 for node in node_list:
     node_dir = NUMA_PATH + f'node{node}/'
@@ -27,4 +28,6 @@ for node, cpulist in node_cpulist.items():
 
 if __name__ == "__main__":
     print(node_cpulist)
+    print()
     print(cpu_nodemap)
+    print("# of nodes:", NR_NODES)

@@ -202,7 +202,6 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     /* data.f_test[2] = (unsigned long)(p->total_numa_faults); */
     /* data.f_test[3] = (unsigned long)(p->numa_faults[0]); */
 
-    /* lb_env_events.perf_submit(ctx, &data, sizeof(data)); */
     context.ts = ts;
     context.cpu = cpu;
     context.p = p;
@@ -223,8 +222,6 @@ int KRETPROBE(can_migrate_task) (struct pt_regs *ctx)
     int cpu = bpf_get_smp_processor_id();
     int ret = PT_REGS_RC(ctx);
 
-    /* lb_ret_data.ts = bpf_ktime_get_ns(); */
-
     context = (struct can_migrate_context *)can_migrate_instances.lookup(&cpu);
     if (!context)
         return 0;
@@ -234,7 +231,6 @@ int KRETPROBE(can_migrate_task) (struct pt_regs *ctx)
     data_p->can_migrate = ret;
     can_migrate_instances.delete(&cpu);
 
-    /* can_migrate_events.perf_submit(ctx, &lb_ret_data, sizeof(lb_ret_data)); */
     can_migrate_events.perf_submit(ctx, data_p, sizeof(*data_p));
     return 0;
 }

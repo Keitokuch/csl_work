@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 import math
 
-from dump_numa_map import cpu_nodemap
+from numa_map import cpu_nodemap, NR_NODES
 
 sysctl_migrate_cost = 500000
 
@@ -71,15 +71,6 @@ class CanMigrateData(DataSource):
                 f.write(','.join(self.columns) + '\n')
             #  self.df.to_csv(self.write_file)
 
-
-    def _update(self, event):
-        #  self._update(event)
-        self.write_cd -= 1
-        if self.write_cd == 0:
-            self.write_cd = self.write_size
-            print('.', end=' ', flush=True)
-
-
     def update(self, event):
         row = {}
         row['ts'] = event.ts
@@ -110,11 +101,11 @@ class CanMigrateData(DataSource):
         row['nr_fails'] = event.nr_balance_failed;
         row['cache_nice_tries'] = event.cache_nice_tries;
         row['can_migrate'] = event.can_migrate
-        #  self.entries.append([str(row[col]) for col in self.columns])
+        self.entries.append([str(row[col]) for col in self.columns])
         #  self.df.loc[ts] = row
         self.write_cd -= 1
         if self.write_cd == 0:
-            #  print('.', end=' ', flush=True)
+            print('.', end=' ', flush=True)
             #  self.df.to_csv(self.write_file, mode='a', header=False)
             #  self.df = self.df.iloc[:0]
             with open(self.write_file, mode='a') as f:
@@ -144,5 +135,3 @@ class CanMigrateData(DataSource):
         filename = filename or self.write_file or 'output.csv'
         self.df.to_csv(self.write_file, mode='a', header=False)
         return self.df
-
-#  lb_context = LoadBalanceContext()
