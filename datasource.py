@@ -59,7 +59,7 @@ class CanMigrateData(DataSource):
                         'delta', 'cpu_idle', 'cpu_not_idle', 'cpu_newly_idle',
                         'same_node', 'prefer_src', 'prefer_dst',
                         'delta_faults', 'total_faults',
-                        'nr_fails', 'cache_nice_tries', 'can_migrate']
+                        'nr_fails', 'cache_nice_tries', 'buddy_hot', 'can_migrate']
         self.entries = []
         if not write_file:
             raise ValueError('write_file has to be specified for autowrite')
@@ -100,12 +100,13 @@ class CanMigrateData(DataSource):
         row['src_preferred_len'] = event.src_nr_preferred_running
         row['nr_fails'] = event.nr_balance_failed;
         row['cache_nice_tries'] = event.cache_nice_tries;
+        row['buddy_hot'] = event.buddy_hot
         row['can_migrate'] = event.can_migrate
         self.entries.append([str(row[col]) for col in self.columns])
         #  self.df.loc[ts] = row
         self.write_cd -= 1
         if self.write_cd == 0:
-            print('.', end=' ', flush=True)
+            #  print('.', end=' ', flush=True)
             #  self.df.to_csv(self.write_file, mode='a', header=False)
             #  self.df = self.df.iloc[:0]
             with open(self.write_file, mode='a') as f:

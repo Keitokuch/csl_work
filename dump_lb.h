@@ -59,6 +59,7 @@ struct migrate_data {
     int cpu_idle;
     int cpu_not_idle;
     int cpu_newly_idle;
+    int buddy_hot;
     unsigned int nr_balance_failed;
     unsigned int cache_nice_tries;
     s64 delta;

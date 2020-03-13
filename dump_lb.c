@@ -7,6 +7,7 @@
 #include <linux/percpu.h>
 #include <linux/sched/mm.h>
 #include <linux/percpu.h>
+#include <linux/lockdep.h>
 #include <linux/migrate.h>
 #include <linux/mm.h>
 #include <linux/smp.h>
@@ -95,6 +96,18 @@ static inline unsigned long task_faults(struct task_struct *p, int nid)
 		*(p->numa_faults + task_faults_idx(NUMA_MEM, nid, 1));
 }
 
+/* runqueue on which this entity is (to be) queued */
+static inline struct cfs_rq *cfs_rq_of(struct sched_entity *se)
+{
+	return se->cfs_rq;
+}
+
+static inline u64 rq_clock_task(struct rq *rq)
+{
+	lockdep_assert_held(&rq->lock);
+
+	return rq->clock_task;
+}
 
 /* BPF_HASH(lb_instances, int, struct lb_context); */
 BPF_HASH(can_migrate_instances, int, struct can_migrate_context);
@@ -178,10 +191,15 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     data.src_nr_numa_running = src_rq->nr_numa_running;
     data.src_nr_preferred_running = src_rq->nr_preferred_running;
 
-    data.delta = src_rq->clock_task - p->se.exec_start;
+	data.delta = rq_clock_task(env->src_rq) - p->se.exec_start;
 
     data.nr_balance_failed = env->sd->nr_balance_failed;
     data.cache_nice_tries = env->sd->cache_nice_tries;
+
+    if (dst_rq->nr_running && (&p->se == cfs_rq_of(&p->se)->next || &p->se == cfs_rq_of(&p->se)->last))
+        data.buddy_hot = 1;
+    else
+        data.buddy_hot = 0;
 
     int n;
     /* if (p->numa_group) { */
