@@ -54,12 +54,15 @@ class CanMigrateData(DataSource):
                    'delta_faults', 'total_faults', 'can_migrate']
         self.df = pd.DataFrame(columns=columns)
         self.df.set_index('ts', inplace=True)
-        self.columns = ['ts', 'pid', 'src_cpu', 'dst_cpu', 'imbalance',
+        self.columns = ['ts', 'curr_pid', 'pid', 'src_cpu', 'dst_cpu', 'imbalance',
                         'src_len', 'src_numa_len', 'src_preferred_len',
                         'delta', 'cpu_idle', 'cpu_not_idle', 'cpu_newly_idle',
                         'same_node', 'prefer_src', 'prefer_dst',
                         'delta_faults', 'total_faults',
-                        'nr_fails', 'cache_nice_tries', 'buddy_hot', 'can_migrate']
+                        'dst_len', 'src_load', 'dst_load',
+                        'nr_fails', 'cache_nice_tries', 'buddy_hot',
+                        'throttled', 'p_running',
+                        'can_migrate']
         self.entries = []
         if not write_file:
             raise ValueError('write_file has to be specified for autowrite')
@@ -78,6 +81,7 @@ class CanMigrateData(DataSource):
         dst_cpu = event.dst_cpu
         src_nid = cpu_nodemap[src_cpu]
         dst_nid = cpu_nodemap[dst_cpu]
+        row['curr_pid'] = event.curr_pid
         row['pid'] = event.pid
         row['src_cpu'] = src_cpu
         row['dst_cpu'] = dst_cpu
@@ -98,17 +102,21 @@ class CanMigrateData(DataSource):
         row['src_len'] = event.src_nr_running
         row['src_numa_len'] = event.src_nr_numa_running
         row['src_preferred_len'] = event.src_nr_preferred_running
+        row['dst_len'] = event.dst_nr_running
+        row['src_load'] = event.src_load
+        row['dst_load'] = event.dst_load
         row['nr_fails'] = event.nr_balance_failed;
         row['cache_nice_tries'] = event.cache_nice_tries;
         row['buddy_hot'] = event.buddy_hot
+        row['p_running'] = event.p_running
+        #  row['fair_class'] = event.fair_class
+        row['throttled'] = event.throttled
         row['can_migrate'] = event.can_migrate
         self.entries.append([str(row[col]) for col in self.columns])
         #  self.df.loc[ts] = row
         self.write_cd -= 1
         if self.write_cd == 0:
-            #  print('.', end=' ', flush=True)
-            #  self.df.to_csv(self.write_file, mode='a', header=False)
-            #  self.df = self.df.iloc[:0]
+            print('.', end=' ', flush=True)
             with open(self.write_file, mode='a') as f:
                 for row in self.entries:
                     f.write(','.join(row) + '\n')

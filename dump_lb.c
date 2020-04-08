@@ -7,6 +7,7 @@
 #include <linux/percpu.h>
 #include <linux/sched/mm.h>
 #include <linux/percpu.h>
+#include <linux/bitmap.h>
 #include <linux/lockdep.h>
 #include <linux/migrate.h>
 #include <linux/mm.h>
@@ -109,8 +110,13 @@ static inline u64 rq_clock_task(struct rq *rq)
 	return rq->clock_task;
 }
 
+struct pid_cpu_key {
+    int pid;
+    int cpu;
+};
+
 /* BPF_HASH(lb_instances, int, struct lb_context); */
-BPF_HASH(can_migrate_instances, int, struct can_migrate_context);
+BPF_HASH(can_migrate_instances, struct pid_cpu_key, struct can_migrate_context);
 
 BPF_PERF_OUTPUT(can_migrate_events);
 
@@ -161,19 +167,16 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     struct can_migrate_context context = {};
     int idle = env->idle;
     int cpu = bpf_get_smp_processor_id();
+    u32 pid = bpf_get_current_pid_tgid();
     u64 ts = bpf_ktime_get_ns();
 
-    if (throttled_lb_pair(p->sched_task_group, env->src_cpu, env->dst_cpu))
-        return 0;
+    struct pid_cpu_key key = {pid, cpu};
 
-    if (!cpumask_test_cpu(env->dst_cpu, &p->cpus_allowed))
-        return 0;
+    data.throttled = (throttled_lb_pair(p->sched_task_group, env->src_cpu, env->dst_cpu));
 
-    if (p->on_cpu)
-        return 0;
+    data.p_running = p->on_cpu;
 
     data.ts = ts;
-    data.instance_ts = ts;
 
     data.src_cpu = env->src_cpu;
     data.dst_cpu = env->dst_cpu;
@@ -182,14 +185,21 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     data.cpu_not_idle = idle == CPU_NOT_IDLE;
     data.cpu_newly_idle = idle == CPU_NEWLY_IDLE;
 
+    data.curr_pid = pid;
     data.pid = p->pid;
     data.numa_preferred_nid = p->numa_preferred_nid;
     /* data.p_policy = p->policy; */
-    /* data.p_running = p->on_cpu; */
+	/* data.fair_class = (p->policy == SCHED_NORMAL || p->policy == SCHED_BATCH); */
 
     data.src_nr_running = src_rq->nr_running;
     data.src_nr_numa_running = src_rq->nr_numa_running;
     data.src_nr_preferred_running = src_rq->nr_preferred_running;
+
+    data.dst_nr_running = dst_rq->nr_running;
+    /* data.src_cpu_load = *(src_rq->cpu_load); */
+    /* data.dst_cpu_load = *(dst_rq->cpu_load); */
+    data.src_load = src_rq->cfs.avg.load_avg;
+    data.dst_load = dst_rq->cfs.avg.load_avg;
 
 	data.delta = rq_clock_task(env->src_rq) - p->se.exec_start;
 
@@ -202,23 +212,16 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
         data.buddy_hot = 0;
 
     int n;
-    /* if (p->numa_group) { */
-    if (0) {
-        for (n = 0; n < NR_NODES; n++) {
-            data.p_numa_faults[n] = group_faults(p, n);
-        }
-        data.total_numa_faults = p->numa_group->total_faults;
-    } else {
-        for (n = 0; n < NR_NODES; n++) {
-            data.p_numa_faults[n] = task_faults(p, n);
-        }
-        data.total_numa_faults = p->total_numa_faults;
+    for (n = 0; n < NR_NODES; n++) {
+        data.p_numa_faults[n] = task_faults(p, n);
     }
+    data.total_numa_faults = p->total_numa_faults;
 
     /* data.f_test[0] = (unsigned long)*(p->numa_faults + 1); */
     /* data.f_test[1] = (unsigned long)(p->numa_faults[1]); */
     /* data.f_test[2] = (unsigned long)(p->total_numa_faults); */
     /* data.f_test[3] = (unsigned long)(p->numa_faults[0]); */
+
 
     context.ts = ts;
     context.cpu = cpu;
@@ -226,7 +229,8 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     context.env = env;
     context.data = data;
     
-    can_migrate_instances.update(&cpu, &context);
+    /* can_migrate_instances.update(&pid, &context); */
+    can_migrate_instances.update(&key, &context);
 
     return 0;
 }
@@ -238,17 +242,20 @@ int KRETPROBE(can_migrate_task) (struct pt_regs *ctx)
     struct migrate_data *data_p;
     struct can_migrate_context *context;
     int cpu = bpf_get_smp_processor_id();
+    u32 pid = bpf_get_current_pid_tgid();
     int ret = PT_REGS_RC(ctx);
 
-    context = (struct can_migrate_context *)can_migrate_instances.lookup(&cpu);
+    struct pid_cpu_key key = {pid, cpu};
+
+    context = (struct can_migrate_context *)can_migrate_instances.lookup(&key);
     if (!context)
         return 0;
 
     data_p = &context->data;
 
     data_p->can_migrate = ret;
-    can_migrate_instances.delete(&cpu);
-
     can_migrate_events.perf_submit(ctx, data_p, sizeof(*data_p));
+
+    can_migrate_instances.delete(&key);
     return 0;
 }

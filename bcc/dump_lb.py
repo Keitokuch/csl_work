@@ -4,6 +4,7 @@ from bcc import BPF
 import sys
 
 from datasource import lb_context
+print(BPF.support_kfunc())
 
 # initialize BPF & probes
 b = BPF(src_file='dump_lb.c')

@@ -1,4 +1,6 @@
 #include "sched.h"
+#include <linux/types.h>
+#include <linux/cpumask.h>
 
 #define NR_LOOPS 7
 #define DUMPS_PER_LOOP 2
@@ -51,26 +53,27 @@ struct migrate_data {
     int dst_cpu;
     int src_cpu;
     int pid;
+    int curr_pid;
     long imbalance;
     int numa_preferred_nid;
     unsigned int src_nr_running;
     unsigned int src_nr_numa_running;
     unsigned int src_nr_preferred_running;
+    unsigned int dst_nr_running;
+    unsigned long src_load;
+    unsigned long dst_load;
     int cpu_idle;
     int cpu_not_idle;
     int cpu_newly_idle;
     int buddy_hot;
+    int p_running;
+    int throttled;
     unsigned int nr_balance_failed;
     unsigned int cache_nice_tries;
     s64 delta;
-    // unsigned int p_policy;
-    // int p_running;
     unsigned long p_numa_faults[NR_NODES];
-    // unsigned long f_test[9];
     unsigned long total_numa_faults;
     int can_migrate;
-
-    s64 sysctl_migrate_cost;
 };
 
 struct lb_ret_data {
