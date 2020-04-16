@@ -18,7 +18,10 @@ for node in node_list:
         line = f.readlines()[0].strip()
         for range_str in line.split(','):
             cpu_range = list(map(int, range_str.split('-')))
-            cpu_list = range(cpu_range[0], cpu_range[1] + 1)
+            if len(cpu_range) == 1:
+                cpu_list = [cpu_range[0]]
+            else:
+                cpu_list = range(cpu_range[0], cpu_range[1] + 1)
             node_cpulist[node] += cpu_list
 
 cpu_nodemap = {}
