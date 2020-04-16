@@ -62,6 +62,7 @@ class CanMigrateData(DataSource):
                         'dst_len', 'src_load', 'dst_load',
                         'nr_fails', 'cache_nice_tries', 'buddy_hot',
                         'throttled', 'p_running',
+                        'test_aggressive',
                         'can_migrate']
         self.entries = []
         if not write_file:
@@ -112,6 +113,8 @@ class CanMigrateData(DataSource):
         #  row['fair_class'] = event.fair_class
         row['throttled'] = event.throttled
         row['can_migrate'] = event.can_migrate
+
+        row['test_aggressive'] = event.test_aggressive
         self.entries.append([str(row[col]) for col in self.columns])
         #  self.df.loc[ts] = row
         self.write_cd -= 1

@@ -74,6 +74,7 @@ struct migrate_data {
     unsigned long p_numa_faults[NR_NODES];
     unsigned long total_numa_faults;
     int can_migrate;
+    unsigned int test_aggressive;
 };
 
 struct lb_ret_data {
