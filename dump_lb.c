@@ -252,7 +252,7 @@ int KRETPROBE(can_migrate_task) (struct pt_regs *ctx)
         return 0;
 
     data_p = &context->data;
-    env = &context->env;
+    env = context->env;
 
     data_p->test_aggressive = env->src_rq->test_aggressive;
 

@@ -343,6 +343,8 @@ struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
 
+	unsigned int test_aggressive;
+
 	/*
 	 * nr_running and cpu_load should be in the same cacheline because
 	 * remote CPUs use both these fields when doing load calculation.

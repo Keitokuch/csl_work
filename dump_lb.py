@@ -8,8 +8,8 @@ from datasource import CanMigrateData
 
 
 cm_events = []
-can_migrate_datasource = CanMigrateData(append=True, write_size=800,
-                                        write_file='./raw_ng20.csv')
+can_migrate_datasource = CanMigrateData(append=False, write_size=800,
+                                        write_file='./test0.csv')
 
 # initialize BPF & probes
 b = BPF(src_file='dump_lb.c')
