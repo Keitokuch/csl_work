@@ -116,7 +116,8 @@ class CanMigrateData(DataSource):
         row['can_migrate'] = event.can_migrate
 
         row['test_aggressive'] = event.test_aggressive
-        row['pc_0'] = event.
+        row['pc_0'] = event.perf_count_0
+        row['pc_1'] = event.perf_count_1
         self.entries.append([str(row[col]) for col in self.columns])
         #  self.df.loc[ts] = row
         self.write_cd -= 1
