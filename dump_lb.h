@@ -75,6 +75,8 @@ struct migrate_data {
     unsigned long total_numa_faults;
     int can_migrate;
     unsigned int test_aggressive;
+    u64 perf_count_0;
+    u64 perf_count_1;
 };
 
 struct lb_ret_data {

@@ -222,6 +222,8 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     /* data.f_test[2] = (unsigned long)(p->total_numa_faults); */
     /* data.f_test[3] = (unsigned long)(p->numa_faults[0]); */
 
+    data.perf_count_0 = src_rq->perf_count_0;
+    data.perf_count_1 = src_rq->perf_count_1;
 
     context.ts = ts;
     context.cpu = cpu;

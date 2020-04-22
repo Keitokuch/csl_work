@@ -63,7 +63,8 @@ class CanMigrateData(DataSource):
                         'nr_fails', 'cache_nice_tries', 'buddy_hot',
                         'throttled', 'p_running',
                         'test_aggressive',
-                        'can_migrate']
+                        'can_migrate',
+                        'pc_0', 'pc_1']
         self.entries = []
         if not write_file:
             raise ValueError('write_file has to be specified for autowrite')
@@ -115,6 +116,7 @@ class CanMigrateData(DataSource):
         row['can_migrate'] = event.can_migrate
 
         row['test_aggressive'] = event.test_aggressive
+        row['pc_0'] = event.
         self.entries.append([str(row[col]) for col in self.columns])
         #  self.df.loc[ts] = row
         self.write_cd -= 1
