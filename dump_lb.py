@@ -3,12 +3,22 @@
 from bcc import BPF
 import sys
 import logging
+import argparse
 
 from datasource import CanMigrateData
 
+parser = argparse.ArgumentParser()
+parser.add_argument('write_file')
+parser.add_argument('-a', '--append', action='store_true')
+parser.add_argument('-s', '--write_size', action='store')
+args = parser.parse_args()
 
+write_size = args.write_size or 500
+
+print('Writing to {}'.format(args.write_file))
 cm_events = []
-can_migrate_datasource = CanMigrateData(append=False, write_size=800,
+can_migrate_datasource = CanMigrateData(append=args.append,
+                                        write_size=write_size,
                                         write_file='./test0.csv')
 
 # initialize BPF & probes
