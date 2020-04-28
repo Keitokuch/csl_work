@@ -1,14 +1,20 @@
 #! /usr/bin/env bash
 kernel="/boot/vmlinuz-$(uname -r)"
-kernel="vmroot/usr/src/linux-4.15/arch/x86/boot/bzImage"
+# kernel="vmroot/usr/src/linux-4.15/arch/x86/boot/bzImage"
 kernel="linux-4.15/arch/x86/boot/bzImage"
 image="vm.img"
 sudo qemu-system-x86_64 \
+    -net nic, -net user \
+    -enable-kvm \
+    -cpu host \
     -kernel $kernel \
     -nographic \
     -hda $image \
     -append "root=/dev/sda rw console=ttyS0" -k en-us \
-    -numa node,nodeid=0 -numa node,nodeid=1 \
-    -smp cpus=4 -m 512 \
-    -net nic, -net user
-    # -netdev user,id=user.0 -device e1000,netdev=user.0
+    -smp cpus=$(nproc) \
+    -numa node,nodeid=0,cpus=0-13,cpus=28-41 -numa node,nodeid=1,cpus=14-27,cpus=42-55 \
+    -m 32g \
+    # -net nic,model=virtio -net user
+    # -netdev user,id=mynet0
+    # -net nic -net tap,ifname=tap0,script=no,downscript=no
+    # -netdev user,id=user.1 -device e1000,netdev=user.1
