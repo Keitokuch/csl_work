@@ -13,47 +13,12 @@ class DataSource(ABC):
         pass
 
     @abstractmethod
-    def poll(self, ts):
-        pass
-
-    @abstractmethod
     def dump(self):
         pass
-
-
-class LoadBalanceContext(DataSource):
-    def __init__(self):
-        self.df = pd.DataFrame(columns=['ts', 'src_cpu', 'dst_cpu', 'imbalance'])
-        self.df.set_index('ts', inplace=True)
-        self.na = {'src_cpu': -1, 'dst_cpu': -1, 'imbalance': 'na'}
-
-    def update(self, event):
-        ts = event.instance_ts
-        src_cpu = event.src_cpu
-        dst_cpu = event.dst_cpu
-        imbalance = event.imbalance
-        self.df.loc[ts] = [src_cpu, dst_cpu, imbalance]
-
-    def poll(self, ts):
-        try:
-            ret = self.df.loc[ts]
-            return ret
-        except KeyError:
-            print('poll lb_context with invalid index', ts)
-            return self.na
-
-    def dump(self):
-        return self.df
 
 
 class CanMigrateData(DataSource):
-    def __init__(self, append=False, write_size=1000, write_file=None):
-        columns = ['ts', 'pid', 'src_cpu', 'dst_cpu', 'imbalance',
-                   'same_node', 'prefer_src', 'prefer_dst', 'delta',
-                   'src_len', 'src_numa_len', 'src_preferred_len',
-                   'delta_faults', 'total_faults', 'can_migrate']
-        self.df = pd.DataFrame(columns=columns)
-        self.df.set_index('ts', inplace=True)
+    def __init__(self, append=False, write_size=1000, write_file):
         self.columns = ['ts', 'curr_pid', 'pid', 'src_cpu', 'dst_cpu', 'imbalance',
                         'src_len', 'src_numa_len', 'src_preferred_len',
                         'delta', 'cpu_idle', 'cpu_not_idle', 'cpu_newly_idle',
@@ -66,15 +31,12 @@ class CanMigrateData(DataSource):
                         'can_migrate',
                         'pc_0', 'pc_1']
         self.entries = []
-        if not write_file:
-            raise ValueError('write_file has to be specified for autowrite')
         self.write_size = write_size
         self.write_cd = write_size
         self.write_file = write_file
         if not append:
             with open(self.write_file, 'w') as f:
                 f.write(','.join(self.columns) + '\n')
-            #  self.df.to_csv(self.write_file)
 
     def update(self, event):
         row = {}
@@ -137,16 +99,3 @@ class CanMigrateData(DataSource):
                 f.write(','.join(row) + '\n')
         self.entries = []
         return 'Entries Dumped'
-
-    def poll(self, ts):
-        try:
-            ret = self.df.loc[ts]
-            return ret
-        except KeyError:
-            print('poll lb_context with invalid index', ts)
-
-    def _dump(self, filename=None):
-        #  return self.df
-        filename = filename or self.write_file or 'output.csv'
-        self.df.to_csv(self.write_file, mode='a', header=False)
-        return self.df
