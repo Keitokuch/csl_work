@@ -3,7 +3,7 @@ import pandas as pd
 #  df = pd.read_csv('cmdata.csv')
 #  df = pd.read_csv('./parsec_2.csv', index_col='ts')
 #  df = pd.read_csv('./test_running.csv', index_col='ts')
-filename = './raw_ng20.csv'
+filename = './test9.csv'
 df = pd.read_csv(filename, index_col='ts')
 #  print(df['can_migrate'].eq(1).sum(), df['can_migrate'].eq(0).sum())
 
@@ -23,9 +23,14 @@ stats['throttled'] = df.throttled.eq(1).sum()
 stats['running'] = df.p_running.eq(1).sum()
 stats['running and can_migrate'] = (df.p_running.eq(1) & df.can_migrate.eq(1)).sum()
 stats['buddy_hot and can_migrate'] = (df.buddy_hot.eq(1) & df.can_migrate.eq(1)).sum()
+stats['throttled and running'] = (df.throttled.eq(1) & df.p_running.eq(1)).sum()
+stats['throttled and aggressive'] = (df.throttled.eq(1) & df.test_aggressive.eq(1)).sum()
+stats['running and aggressive'] = (df.p_running.eq(1) & df.test_aggressive.eq(1)).sum()
+stats['!test_aggressive and can_migrate'] = (df.test_aggressive.eq(0) & df.can_migrate.eq(1)).sum()
 stats['mean load'] = df.src_load.max()
 stats['mean dstload'] = df.dst_load.mean()
 stats['mean len'] = df.src_len.mean()
+stats['test_aggressive'] = df.test_aggressive.eq(1).sum()
 #  stats['fair_class'] = df.fair_class.eq(1).sum()
 stats['can migrate'] = df.can_migrate.eq(1).sum()
 stats['total'] = len(df)

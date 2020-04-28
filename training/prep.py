@@ -4,7 +4,7 @@ import numpy as np
 from training_config import columns
 
 tags = ['parsec46', 'ng46', 'ng20', 'idle46']
-#  tags = ['ng20']
+tags = ['test9']
 INPUT=[f'../raw_{tag}.csv' for tag in tags]
 OUTPUT='./post_combined71.csv'
 
@@ -28,8 +28,9 @@ def combine_csv(dfs):
     return ret_df
 
 def preprocess(df):
-    df = df.loc[df.p_running.eq(0)]
-    df = df.loc[df.throttled.eq(0)]
+    #  df = df.loc[df.p_running.eq(0)]
+    #  df = df.loc[df.throttled.eq(0)]
+    df = df.loc[df.test_aggressive.eq(1)]
     df['delta_hot'] = np.where(df['delta'] < 500000, 1, 0)
     df['src_non_pref_nr'] = np.where(df['src_len'] > df['src_preferred_len'], 1, 0)
     #  df['src_non_pref_nr'] = np.where(df['src_len'] - df['src_preferred_len'] > 0, 1, 0) #/ df['src_len']).mask(df['src_len'] == 0, 0)
@@ -61,7 +62,7 @@ for idx, df in enumerate(dfs):
     print(outname)
     df.to_csv(outname, index=False)
 
-if len(dfs) > 0:
+if len(dfs) > 1:
     if DO_BALANCE:
         combined = combine_csv_balanced(dfs)
     else:

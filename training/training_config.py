@@ -6,6 +6,7 @@ fields=['src_non_pref_nr', 'src_non_numa_nr', 'delta_hot', 'cpu_idle',
           'src_load', 'dst_load',
           'throttled',
           'dst_len',
+          'test_aggressive',
           'delta_faults', 'extra_fails', 'buddy_hot']
 label=['can_migrate']
 
@@ -24,6 +25,7 @@ features=[
     'dst_load',
     #  'throttled',
     'dst_len',
+    'test_aggressive',
     'delta_faults', 'extra_fails', 'buddy_hot'
 ]
 
