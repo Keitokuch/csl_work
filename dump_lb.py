@@ -8,18 +8,20 @@ import argparse
 from datasource import CanMigrateData
 
 parser = argparse.ArgumentParser()
-parser.add_argument('write_file')
-parser.add_argument('-a', '--append', action='store_true')
+parser.add_argument('-t', '--tag', help='tag for output')
+parser.add_argument('-o', '--output', help='output file name (overwrites -t)')
+parser.add_argument('-a', '--append', action='store_true', help='append to output')
 parser.add_argument('-s', '--write_size', type=int, action='store')
 args = parser.parse_args()
 
+write_file = args.output or args.tag and 'raw_' + args.tag or 'output.csv'
 write_size = args.write_size or 500
 
-print('Writing to {}'.format(args.write_file))
+print('Writing to {}'.format(write_file))
 cm_events = []
 can_migrate_datasource = CanMigrateData(append=args.append,
                                         write_size=write_size,
-                                        write_file=args.write_file)
+                                        write_file=write_file)
 
 # initialize BPF & probes
 b = BPF(src_file='dump_lb.c')
