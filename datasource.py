@@ -18,7 +18,7 @@ class DataSource(ABC):
 
 
 class CanMigrateData(DataSource):
-    def __init__(self, append=False, write_size=1000, write_file):
+    def __init__(self, write_file, append=False, write_size=1000):
         self.columns = ['ts', 'curr_pid', 'pid', 'src_cpu', 'dst_cpu', 'imbalance',
                         'src_len', 'src_numa_len', 'src_preferred_len',
                         'delta', 'cpu_idle', 'cpu_not_idle', 'cpu_newly_idle',
