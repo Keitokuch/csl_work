@@ -18,7 +18,7 @@
 #include <linux/nodemask.h>
 #include <linux/sched/idle.h>
 
-#include "sched.h"
+#include "old_sched.h"
 #include "dump_lb.h"
 
 
@@ -223,8 +223,8 @@ int KPROBE(can_migrate_task) (struct pt_regs *ctx, struct task_struct *p, struct
     /* data.f_test[2] = (unsigned long)(p->total_numa_faults); */
     /* data.f_test[3] = (unsigned long)(p->numa_faults[0]); */
 
-    data.perf_count_0 = src_rq->perf_count_0;
-    data.perf_count_1 = src_rq->perf_count_1;
+    data.perf_count_0 = 0;
+    data.perf_count_1 = 0;
 
     context.ts = ts;
     context.cpu = cpu;
@@ -257,7 +257,7 @@ int KRETPROBE(can_migrate_task) (struct pt_regs *ctx)
     data_p = &context->data;
     env = context->env;
 
-    data_p->test_aggressive = env->test_aggressive;
+    data_p->test_aggressive = 0;
 
     data_p->can_migrate = ret;
     can_migrate_events.perf_submit(ctx, data_p, sizeof(*data_p));

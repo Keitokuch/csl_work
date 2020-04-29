@@ -1,4 +1,3 @@
-#include "sched.h"
 #include <linux/types.h>
 #include <linux/cpumask.h>
 
