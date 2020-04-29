@@ -1,9 +1,10 @@
 import pandas as pd
+import sys
 
 #  df = pd.read_csv('cmdata.csv')
 #  df = pd.read_csv('./parsec_2.csv', index_col='ts')
 #  df = pd.read_csv('./test_running.csv', index_col='ts')
-filename = './test9.csv'
+filename = sys.argv[1]
 df = pd.read_csv(filename, index_col='ts')
 #  print(df['can_migrate'].eq(1).sum(), df['can_migrate'].eq(0).sum())
 
