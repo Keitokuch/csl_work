@@ -4,7 +4,7 @@ import numpy as np
 from training_config import columns, OLD_KERNEL
 
 
-def combine_csv_balanced(cfs):
+def combine_csv_balanced(dfs):
     min_len = min(map(len, dfs))
     ret_df = None
     for df in dfs:
