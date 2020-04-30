@@ -22,7 +22,7 @@ def combine_csv(dfs):
 def _preprocess(df):
     if OLD_KERNEL:
         df = df.loc[df.p_running.eq(0)]
-        df = df.loc[df.throttled.eq(0)]
+        #  df = df.loc[df.throttled.eq(0)]
     else:
         df = df.loc[df.test_aggressive.eq(1)]
     df['delta_hot'] = np.where(df['delta'] < 500000, 1, 0)

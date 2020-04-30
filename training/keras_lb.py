@@ -113,22 +113,24 @@ def keras_train(model_tag=None):
             test_df = extra_test_df
             test_X, test_y = test_df[features], test_df[label]
             print(model.evaluate(test_df[features], test_df[label]))
-            test_df = test_df[features + label]
-            test_df.loc[:,'prediction'] = np.where(model.predict(test_X) < 0.5, 0, 1)
-            test_df.to_csv(f'predict_{EVALUATE_TAG}.csv', index=False)
 
-            print(EVALUATE_TAG)
-            df = test_df
-            total = len(df)
-            stats = {}
-            stats['can migrate'] = df.can_migrate.eq(1).sum()
-            stats['false-negative (1,0)'] = (df.can_migrate.eq(1) & df.prediction.eq(0)).sum()
-            stats['false-positive (0,1)'] = (df.can_migrate.eq(0) & df.prediction.eq(1)).sum()
-            stats['true-positive (1,1)'] = (df.can_migrate.eq(1) & df.prediction.eq(1)).sum()
-            stats['true-negative (0,0)'] = (df.can_migrate.eq(0) & df.prediction.eq(0)).sum()
-            stats['total'] = len(df)
-            for item in stats:
-                print(item, stats[item], '{:.4f}'.format(stats[item] / total))
+        EVALUATE_TAG = LOAD_EVALUATE and EVALUATE_TAG or model_tag
+        test_df = test_df[features + label]
+        test_df.loc[:,'prediction'] = np.where(model.predict(test_X) < 0.5, 0, 1)
+        test_df.to_csv(f'predict_{EVALUATE_TAG}.csv', index=False)
+
+        print('Evaluate', EVALUATE_TAG)
+        df = test_df
+        total = len(df)
+        stats = {}
+        stats['can migrate'] = df.can_migrate.eq(1).sum()
+        stats['false-negative (1,0)'] = (df.can_migrate.eq(1) & df.prediction.eq(0)).sum()
+        stats['false-positive (0,1)'] = (df.can_migrate.eq(0) & df.prediction.eq(1)).sum()
+        stats['true-positive (1,1)'] = (df.can_migrate.eq(1) & df.prediction.eq(1)).sum()
+        stats['true-negative (0,0)'] = (df.can_migrate.eq(0) & df.prediction.eq(0)).sum()
+        stats['total'] = len(df)
+        for item in stats:
+            print(item, stats[item], '{:.4f}'.format(stats[item] / total))
 
 
 if __name__ == "__main__":
