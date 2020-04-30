@@ -25,6 +25,7 @@ def _preprocess(df):
         #  df = df.loc[df.throttled.eq(0)]
     else:
         df = df.loc[df.test_aggressive.eq(1)]
+
     df['delta_hot'] = np.where(df['delta'] < 500000, 1, 0)
     df['src_non_pref_nr'] = np.where(df['src_len'] > df['src_preferred_len'], 1, 0)
     #  df['src_non_pref_nr'] = np.where(df['src_len'] - df['src_preferred_len'] > 0, 1, 0) #/ df['src_len']).mask(df['src_len'] == 0, 0)
