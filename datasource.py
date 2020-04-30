@@ -1,10 +1,17 @@
 from abc import ABC, abstractmethod
 import pandas as pd
 import math
+import logging
 
 from numa_map import cpu_nodemap, NR_NODES
+from dump_config import COLUMNS, OLD_KERNEL
 
 sysctl_migrate_cost = 500000
+logger = logging.getLogger('datasource')
+fhdlr = logging.FileHandler('write.log', mode='w')
+fhdlr.terminator=''
+logger.addHandler(fhdlr)
+
 
 class DataSource(ABC):
 
@@ -18,25 +25,19 @@ class DataSource(ABC):
 
 
 class CanMigrateData(DataSource):
-    def __init__(self, write_file, append=False, write_size=1000):
-        self.columns = ['ts', 'curr_pid', 'pid', 'src_cpu', 'dst_cpu', 'imbalance',
-                        'src_len', 'src_numa_len', 'src_preferred_len',
-                        'delta', 'cpu_idle', 'cpu_not_idle', 'cpu_newly_idle',
-                        'same_node', 'prefer_src', 'prefer_dst',
-                        'delta_faults', 'total_faults',
-                        'dst_len', 'src_load', 'dst_load',
-                        'nr_fails', 'cache_nice_tries', 'buddy_hot',
-                        'throttled', 'p_running',
-                        'test_aggressive',
-                        'can_migrate',
-                        'pc_0', 'pc_1']
+    def __init__(self, write_file, append=False, write_size=None):
+        self.columns = COLUMNS
         self.entries = []
-        self.write_size = write_size
-        self.write_cd = write_size
+        self.write_size = write_size or 1000
+        self.write_cd = self.write_size
         self.write_file = write_file
         if not append:
             with open(self.write_file, 'w') as f:
                 f.write(','.join(self.columns) + '\n')
+
+        print('DataSource initialized. Writing to {}'.format(write_file))
+        print('write-size: {}, appending: {}'.format(self.write_size, append))
+        logger.warn('{}, {}\n'.format(write_file, self.write_size))
 
     def update(self, event):
         row = {}
@@ -84,7 +85,8 @@ class CanMigrateData(DataSource):
         #  self.df.loc[ts] = row
         self.write_cd -= 1
         if self.write_cd == 0:
-            print('.', end=' ', flush=True)
+            #  print('.', end=' ', flush=True)
+            logger.warn('.')
             with open(self.write_file, mode='a') as f:
                 for row in self.entries:
                     f.write(','.join(row) + '\n')

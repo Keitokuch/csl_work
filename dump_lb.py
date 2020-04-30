@@ -6,6 +6,7 @@ import logging
 import argparse
 
 from datasource import CanMigrateData
+from dump_config import OLD_KERNEL
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--tag', help='tag for output')
@@ -15,16 +16,16 @@ parser.add_argument('-s', '--write_size', type=int, action='store')
 parser.add_argument('--old', action='store_true', help='original kernel')
 args = parser.parse_args()
 
-write_file = args.output or args.tag and 'raw_' + args.tag or 'output.csv'
-write_size = args.write_size or 500
+write_file = args.output or args.tag and f'raw_{args.tag}.csv' or 'output.csv'
 
-print('Writing to {}'.format(write_file))
 cm_events = []
 can_migrate_datasource = CanMigrateData(append=args.append,
-                                        write_size=write_size,
+                                        write_size=args.write_size,
                                         write_file=write_file)
 
-bpf_text = 'old_dump_lb.c' if args.old else 'dump_lb.c'
+OLD_KERNEL = args.old or OLD_KERNEL
+if OLD_KERNEL: print('Old Kernel')
+bpf_text = 'old_dump_lb.c' if OLD_KERNEL else 'dump_lb.c'
 
 # initialize BPF & probes
 b = BPF(src_file=bpf_text)
