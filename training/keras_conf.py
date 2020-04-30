@@ -7,7 +7,6 @@ DO_DUMP         = 0
 DO_EVALUATE     = 1
 LOAD_EVALUATE   = 0
 EVALUATE_TAG = 'default'
-#  EVALUATE_SET = './post_fibo46.csv'
 
 X_val           = 0
 

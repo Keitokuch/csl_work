@@ -60,10 +60,11 @@ def preprocess(tags, balance=None, out_tag=None):
     if len(dfs) > 1:
         if balance:
             combined = combine_csv_balanced(dfs)
+            print('Combined balanced output', output)
         else:
             combined = combine_csv(dfs)
+            print('Combined output', output)
 
-        print('Combined output', output)
         combined.to_csv(output, index=False)
 
 

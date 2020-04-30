@@ -108,7 +108,8 @@ def keras_train(model_tag=None, dump=None):
 
 
     if DO_DUMP:
-        with open('weights_pickle', 'wb') as f:
+        pickle_file = 'pickle_' + model_tag + '.weights'
+        with open(pickle_file, 'wb') as f:
             weights = model.get_weights()
             pickle.dump(weights, f)
 
@@ -117,9 +118,9 @@ def keras_train(model_tag=None, dump=None):
     #  first = weights[0]
     #  print(first[0])
 
-    #final 10-relu 32-0.1-3
+    #final 10-relu batch32-split0.1-epoch3
     if DO_TRAIN:
-        model.fit(train_X, train_y, batch_size=32, validation_split=0.1, epochs=EPOCHS, verbose=False)
+        model.fit(train_X, train_y, batch_size=32, validation_split=0.1, epochs=EPOCHS)
     if DO_SAVE:
         model.save_weights(WEIGHT_FILE)
         model.save(MODEL_FILE)
