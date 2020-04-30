@@ -41,7 +41,8 @@ def _preprocess(df):
     return df
 
 
-def preprocess(tags, balance=False, out_tag=None):
+def preprocess(tags, balance=None, out_tag=None):
+    balance = balance or False
     out_tag = out_tag or 'default'
     output = f'./post_{out_tag}.csv'
     input_list=[f'../raw_{tag}.csv' for tag in tags]

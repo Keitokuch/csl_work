@@ -8,6 +8,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--tags', nargs='+', help='tags list', required=True)
 parser.add_argument('-o', '--object', help='tag for model object')
+parser.add_argument('-b', '--balance', action='store_true', help='balance multiple dumps')
 
 args = parser.parse_args()
 
@@ -17,5 +18,5 @@ if len(tags) == 1:
 else:
     model_tag = args.object
 
-preprocess(tags, out_tag=model_tag)
+preprocess(tags, balance=args.balance, out_tag=model_tag)
 keras_train(model_tag=model_tag)
