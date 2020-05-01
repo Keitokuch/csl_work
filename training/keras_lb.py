@@ -52,12 +52,13 @@ def get_model(input_dim):
 
 
 def keras_train(model_tag=None, dump=None):
-    global EVALUATE_TAG, EVALUATE_SET, DO_DUMP
+    global EVALUATE_TAG, EVALUATE_SET, DO_DUMP, DO_SAVE
     model_tag = model_tag or 'default'
     DATA_FILE = './post_' + model_tag + '.csv'
     WEIGHT_FILE = 'weights_' + model_tag + '.h5'
     MODEL_FILE = 'model_' + model_tag + '.h5'
     DO_DUMP = dump or DO_DUMP
+    DO_SAVE = DO_TRAIN and DO_SAVE or False
     df = pd.read_csv(DATA_FILE)
     head_df = df[:TEST_SIZE]
     tail_df = df[-TEST_SIZE:]
@@ -74,7 +75,7 @@ def keras_train(model_tag=None, dump=None):
             test_y = test_df[label]
             n_features = train_X.shape[1]
             model = get_model(n_features)
-            model.fit(train_X, train_y, batch_size=64, validation_split=0.1, epochs=3)
+            model.fit(train_X, train_y, batch_size=BATCH_SIZE, validation_split=0.1, epochs=EPOCHS)
             loss, acc = model.evaluate(test_X, test_y)
             sum_acc += acc
             print(time, loss, acc, sum_acc / (time+1))
@@ -109,12 +110,6 @@ def keras_train(model_tag=None, dump=None):
                 pass
 
 
-    if DO_DUMP:
-        pickle_file = 'pickle_' + model_tag + '.weights'
-        with open(pickle_file, 'wb') as f:
-            weights = model.get_weights()
-            pickle.dump(weights, f)
-
     #  for lay in weights:
     #      print(len(lay), type(lay[0]))
     #  first = weights[0]
@@ -122,10 +117,18 @@ def keras_train(model_tag=None, dump=None):
 
     #final 10-relu batch32-split0.1-epoch3
     if DO_TRAIN:
-        model.fit(train_X, train_y, batch_size=32, validation_split=0.1, epochs=EPOCHS)
+        model.fit(train_X, train_y, batch_size=BATCH_SIZE, validation_split=0.1, epochs=EPOCHS)
     if DO_SAVE:
         model.save_weights(WEIGHT_FILE)
         model.save(MODEL_FILE)
+
+    if DO_DUMP:
+        pickle_file = 'pickle_' + model_tag + '.weights'
+        print('Dumped', pickle_file)
+        with open(pickle_file, 'wb') as f:
+            weights = model.get_weights()
+            pickle.dump(weights, f)
+
 
     if DO_EVALUATE:
         print(model.evaluate(test_X, test_y))
@@ -143,6 +146,7 @@ def keras_train(model_tag=None, dump=None):
         test_df['prediction'] = np.where(output > 0.5, 1, 0)
         test_df['output'] = output
         test_df.to_csv(f'predict_{EVALUATE_TAG}.csv', index=False)
+        print('Generated prediction', EVALUATE_TAG)
 
         predict_ana(test_df)
 

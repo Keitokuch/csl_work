@@ -11,3 +11,4 @@ EVALUATE_TAG = 'default'
 X_val           = 0
 
 EPOCHS = 3
+BATCH_SIZE = 64

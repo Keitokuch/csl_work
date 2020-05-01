@@ -14,10 +14,7 @@ parser.add_argument('-d', '--dump', action='store_true')
 args = parser.parse_args()
 
 tags = args.tags
-if len(tags) == 1:
-    model_tag = args.object or tags[0]
-else:
-    model_tag = args.object
+model_tag = args.object
 
 preprocess(tags, balance=args.balance, out_tag=model_tag)
 keras_train(model_tag=model_tag, dump=args.dump)

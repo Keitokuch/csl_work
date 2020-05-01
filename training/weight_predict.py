@@ -8,8 +8,6 @@ from predict_ana import predict_ana
 
 pd.options.mode.chained_assignment = None
 
-EVALUATE_FILE = 'post_parsec.csv'
-
 parser = argparse.ArgumentParser()
 parser.add_argument('model_tag')
 parser.add_argument('evaluate_tag')

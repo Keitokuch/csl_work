@@ -21,6 +21,7 @@ def combine_csv(dfs):
 
 def _preprocess(df):
     if OLD_KERNEL:
+        print('OLD_KERNEL')
         df = df.loc[df.p_running.eq(0)]
         #  df = df.loc[df.throttled.eq(0)]
     else:
@@ -70,7 +71,7 @@ def preprocess(tags, balance=None, out_tag=None):
 
 if __name__ == '__main__':
     tags = ['parsec46', 'ng46', 'ng20', 'idle46']
-    tags = ['test9']
+    tags = ['idle']
     out_tag = 'combined71'
 
     DO_BALANCE = 0

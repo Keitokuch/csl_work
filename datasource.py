@@ -85,7 +85,7 @@ class CanMigrateData(DataSource):
         #  self.df.loc[ts] = row
         self.write_cd -= 1
         if self.write_cd == 0:
-            #  print('.', end=' ', flush=True)
+            print('.', end=' ', flush=True)
             logger.warn('.')
             with open(self.write_file, mode='a') as f:
                 for row in self.entries:
