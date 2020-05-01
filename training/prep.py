@@ -3,6 +3,8 @@ import numpy as np
 
 from training_config import columns, OLD_KERNEL
 
+pd.options.mode.chained_assignment = None
+
 
 def combine_csv_balanced(dfs):
     min_len = min(map(len, dfs))
@@ -11,13 +13,11 @@ def combine_csv_balanced(dfs):
         ret_df = df[:min_len] if ret_df is None else ret_df.append(df[:min_len])
     return ret_df
 
-
 def combine_csv(dfs):
     ret_df = None
     for df in dfs:
         ret_df = df if ret_df is None else ret_df.append(df)
     return ret_df
-
 
 def _preprocess(df):
     if OLD_KERNEL:

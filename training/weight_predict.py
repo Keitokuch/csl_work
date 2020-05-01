@@ -1,15 +1,24 @@
 import pickle
 import numpy as np
 import pandas as pd
+import argparse
 
 from training_config import features, label
+from predict_ana import predict_ana
 
-EVALUATE_FILE = 'post60.csv'
+pd.options.mode.chained_assignment = None
 
-test_df = pd.read_csv(EVALUATE_FILE)
+EVALUATE_FILE = 'post_parsec.csv'
 
-test_X = test_df[features].values
-test_y = test_df[label].values
+parser = argparse.ArgumentParser()
+parser.add_argument('model_tag')
+parser.add_argument('evaluate_tag')
+parser.add_argument('-p', '--print', action='store_true')
+args = parser.parse_args()
+
+weight_file = f'./pickle_{args.model_tag}.weights'
+EVALUATE_FILE = f'post_{args.evaluate_tag}.csv'
+
 
 class FC():
 
@@ -21,7 +30,12 @@ class FC():
 
     def forward(self, x):
         y = np.dot(x, self.weights) + self.bias
+        print()
+        print(x, self.weights, y)
         return np.maximum(y, 0, y) # ReLU
+
+    def __repr__(self):
+        return '{} \n {}'.format(self.weights, self.bias)
 
 
 class Model():
@@ -33,16 +47,28 @@ class Model():
         self.layers = []
         for i in range(len(self.weights) // 2):
             self.layers.append(FC(self.weights[i*2], self.weights[i*2+1]))
-        print(self.layers)
 
     def predict(self, x):
         for layer in self.layers:
             x = layer.forward(x)
+        exit()
         return 1 if x > 0.5 else 0
 
 
-model = Model('weights_pickle')
-results = np.array(list(map(model.predict, test_X)))
-correct = (results == test_y.flatten()).sum()
+test_df = pd.read_csv(EVALUATE_FILE)
+test_X = test_df[features].values
+test_y = test_df[label].values
+
+model = Model(weight_file)
+predictions = np.array(list(map(model.predict, test_X)))
+correct = (predictions == test_y.flatten()).sum()
 total = len(test_y)
+print('Running', weight_file, 'on', EVALUATE_FILE)
 print(f'{correct} corrects out of {total}, accuracy: {correct / total :2f}')
+
+test_df['prediction'] = predictions
+predict_ana(test_df)
+
+if args.print:
+    for layer in model.layers:
+        print(layer)

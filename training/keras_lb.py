@@ -11,8 +11,10 @@ import pickle
 
 from training_config import features, label
 from keras_conf import *
+from predict_ana import predict_ana
 
 tf.get_logger().setLevel('ERROR')
+pd.options.mode.chained_assignment = None
 
 
 def print_config():
@@ -137,26 +139,16 @@ def keras_train(model_tag=None, dump=None):
 
         EVALUATE_TAG = LOAD_EVALUATE and EVALUATE_TAG or model_tag
         test_df = test_df[features + label]
-        test_df.loc[:,'prediction'] = np.where(model.predict(test_X) < 0.5, 0, 1)
+        test_df['prediction'] = np.where(model.predict(test_X) < 0.5, 0, 1)
         test_df.to_csv(f'predict_{EVALUATE_TAG}.csv', index=False)
 
-        df = test_df
-        total = len(df)
-        stats = {}
-        stats['can migrate'] = df.can_migrate.eq(1).sum()
-        stats['false-negative (1,0)'] = (df.can_migrate.eq(1) & df.prediction.eq(0)).sum()
-        stats['false-positive (0,1)'] = (df.can_migrate.eq(0) & df.prediction.eq(1)).sum()
-        stats['true-positive (1,1)'] = (df.can_migrate.eq(1) & df.prediction.eq(1)).sum()
-        stats['true-negative (0,0)'] = (df.can_migrate.eq(0) & df.prediction.eq(0)).sum()
-        stats['total'] = len(df)
-        for item in stats:
-            print(item, stats[item], '{:.4f}'.format(stats[item] / total))
+        predict_ana(test_df)
 
 
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--object', help='object model')
+    parser.add_argument('-o', '--object', help='object model', required=True)
     parser.add_argument('-e', '--evaluate')
     parser.add_argument('-t', '--train', action='store_true')
     parser.add_argument('-l', '--load', action='store_true')
