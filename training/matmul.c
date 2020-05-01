@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <time.h>
 
 #define dtype float
 #define m2d(x, i, j) (x)->values[i * (x)->ncol + j]
@@ -57,12 +58,6 @@ void print_matrix(struct matrix *X)
 
 int matmul(struct matrix *X, struct matrix *Y, struct matrix *Z) 
 {
-    if(X->ncol != Y->nrow)
-    {
-        printf("\nDimension unmatching\n");
-        return 1;
-    }
-
     int i, j, k;
     for(i = 0; i < X->nrow; i++)
         for(j = 0; j < Y->ncol; j++)
@@ -77,11 +72,10 @@ int matmul(struct matrix *X, struct matrix *Y, struct matrix *Z)
 int matadd(struct matrix *X, struct matrix *Y, struct matrix *Z)
 {
     int i;
-    if (X->nrow * X->ncol != Y->nrow * Y->ncol) {
-        printf("Mat add size unmatching\n");
-        return 1;
-    }
-
+    /* if (X->nrow * X->ncol != Y->nrow * Y->ncol) { */
+    /*     printf("Mat add size unmatching\n"); */
+    /*     return 1; */
+    /* } */
     for (i = 0; i < X->nrow * X->ncol; i++) {
         Z->values[i] = X->values[i] + Y->values[i];
     }
@@ -108,14 +102,23 @@ int forward_pass(struct matrix *input){
     struct matrix out2 = {1, 1, m6};
     struct matrix B2 = {1, 1, m7};
 
+    clock_t t;
+
+    /* t = clock(); */
     matmul(input, &W1, &out1);
+    /* t = clock() - t; */
+    /* float time_taken = ((float)t)/CLOCKS_PER_SEC; */
+    /* printf("matmul time: %f\n", time_taken); */
+
     ReLU(&out1);
+
     matadd(&out1, &B1, &out1);
 
     matmul(&out1, &W2, &out2);
+
     output = m1d(&out2, 0);
 
-    printf("output: %f\n", output);
+    /* printf("output: %f\n", output); */
     
     return output > 0.5 ? 1 : 0;
 }
@@ -127,10 +130,15 @@ int main()
         0,1,0,0,1,1,1,1,0,0.16399999999999998,0.001,0,0,0.0,0,0
     };
     struct matrix input = {1, 16, m1};
+    clock_t t;
 
+    t = clock();
     prediction = forward_pass(&input);
+    t = clock() - t;
+    float time_taken = ((float)t)/CLOCKS_PER_SEC;
 
     printf("prediction: %d\n", prediction);
+    printf("execution time: %f\n", time_taken);
 
     return 0;
 }
