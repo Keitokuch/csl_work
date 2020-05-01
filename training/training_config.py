@@ -25,11 +25,10 @@ features=[
     'dst_load',
     #  'throttled',
     'dst_len',
-    'test_aggressive',
     'delta_faults', 'extra_fails', 'buddy_hot'
 ]
 
-columns = fields + label
+columns = features + label
 
 OLD_KERNEL = True
 

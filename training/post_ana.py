@@ -1,6 +1,6 @@
 import pandas as pd
 
-filename = './post_ng46.csv'
+filename = './post_idle.csv'
 df = pd.read_csv(filename)
 
 print(filename)

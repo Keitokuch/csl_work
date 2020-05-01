@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import argparse
 
-from training_config import features, label
+from training_config import features, label, columns
 from predict_ana import predict_ana
 
 pd.options.mode.chained_assignment = None
@@ -30,6 +30,7 @@ class FC():
 
     def forward(self, x):
         y = np.dot(x, self.weights) + self.bias
+        #  print(x, self.weights, y)
         return np.maximum(y, 0, y) # ReLU
 
     def __repr__(self):
@@ -52,7 +53,7 @@ class Model():
         return 1 if x > 0.5 else 0
 
 
-test_df = pd.read_csv(EVALUATE_FILE)
+test_df = pd.read_csv(EVALUATE_FILE)[columns]
 test_X = test_df[features].values
 test_y = test_df[label].values
 
@@ -65,6 +66,7 @@ print(f'{correct} corrects out of {total}, accuracy: {correct / total :2f}')
 
 test_df['prediction'] = predictions
 predict_ana(test_df)
+test_df.to_csv(f'wpred_{args.evaluate_tag}.csv', index=False)
 
 if args.print:
     for layer in model.layers:

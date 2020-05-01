@@ -139,7 +139,9 @@ def keras_train(model_tag=None, dump=None):
 
         EVALUATE_TAG = LOAD_EVALUATE and EVALUATE_TAG or model_tag
         test_df = test_df[features + label]
-        test_df['prediction'] = np.where(model.predict(test_X) < 0.5, 0, 1)
+        output = model.predict(test_X)
+        test_df['prediction'] = np.where(output > 0.5, 1, 0)
+        test_df['output'] = output
         test_df.to_csv(f'predict_{EVALUATE_TAG}.csv', index=False)
 
         predict_ana(test_df)

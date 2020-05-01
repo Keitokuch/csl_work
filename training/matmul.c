@@ -110,11 +110,13 @@ int forward_pass(struct matrix *input){
     /* float time_taken = ((float)t)/CLOCKS_PER_SEC; */
     /* printf("matmul time: %f\n", time_taken); */
 
-    ReLU(&out1);
-
     matadd(&out1, &B1, &out1);
 
+    ReLU(&out1);
+
     matmul(&out1, &W2, &out2);
+
+    matadd(&out2, &B2, &out2);
 
     output = m1d(&out2, 0);
 

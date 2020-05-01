@@ -3,7 +3,8 @@
 
 #include "c_mlp.h"
 
-#define DATA_FILE "predict_combined1.csv"
+/* #define DATA_FILE "predict_combined1.csv" */
+#define DATA_FILE "./wpred_combined1.csv"
 #define NR_FEAT     16
 
 #define m2d(x, i, j) (x)->values[i * (x)->ncol + j]
@@ -37,6 +38,21 @@ int matadd(struct matrix *X, struct matrix *Y, struct matrix *Z)
     }
 }
 
+void print_matrix(struct matrix *X)
+{
+    int i, j;
+
+    for(i=0; i<X->nrow; i++)
+    {
+        printf("\n\t");
+        for(j=0; j<X->ncol;j++)
+        {
+            printf("%f\t", m2d(X, i, j));
+        }
+    }
+    printf("\n");
+}
+
 
 void ReLU(struct matrix *X)
 {
@@ -46,7 +62,7 @@ void ReLU(struct matrix *X)
     }
 }
 
-int forward_pass(struct matrix *input){
+float forward_pass(struct matrix *input){
     float output;
     dtype o1[10] = {0};
     dtype o2[10] = {0};
@@ -60,27 +76,29 @@ int forward_pass(struct matrix *input){
 
     matmul(input, &W1, &out1);
 
-    ReLU(&out1);
-
     matadd(&out1, &B1, &out1);
+
+    ReLU(&out1);
 
     matmul(&out1, &W2, &out2);
 
+    matadd(&out2, &B2, &out2);
+
     output = m1d(&out2, 0);
 
-    printf("output: %f\n", output);
-    
-    return output > 0.5 ? 1 : 0;
+    /* printf("output: %f\n", output); */
+    /* return output > 0.5 ? 1 : 0; */
+    return output;
 }
 
 
 int main()
 {
-    int prediction;
     dtype mval[NR_FEAT];
     struct matrix input = {1, NR_FEAT, mval};
     char line[300];
     int correct = 0, total = 0;
+    int py_correct = 0, discrep = 0;
 
     FILE* f = fopen(DATA_FILE, "r");
     fgets(line, 300, f); // Header
@@ -98,16 +116,25 @@ int main()
         }
         int label = atoi(strsep(&string, ","));
         int py_pred = atoi(strsep(&string, ","));
+        /* float py_output = strtof(strsep(&string, ","), NULL); */
         free(tofree);
 
-        prediction = forward_pass(&input);
+        float output = forward_pass(&input);
+        int prediction = output > 0.5 ? 1: 0; 
         total++;
         if (prediction == label)
             correct++;
-        printf("%d %d %d\n", label, py_pred, prediction);
+        if (prediction != py_pred) {
+            discrep++;
+            /* printf("%d %d %d %f %f\n", label, py_pred, prediction, output, py_output); */
+            printf("%d %d %d %f\n", label, py_pred, prediction, output);
+        }
+        if (py_pred == label)
+            py_correct++;
     }
 
     printf("%d corrects out of %d. accuracy: %f\n", correct, total, (float)correct / total);
+    printf("%d py_corrects, %d discreps\n", py_correct, discrep);
 
     /* printf("prediction: %d\n", prediction); */
     /* printf("execution time: %f\n", time_taken); */
