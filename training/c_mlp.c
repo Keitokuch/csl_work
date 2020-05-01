@@ -3,9 +3,9 @@
 
 #include "c_mlp.h"
 
-/* #define DATA_FILE "predict_combined1.csv" */
-#define DATA_FILE "./wpred_combined1.csv"
-#define NR_FEAT     16
+#define DATA_FILE "./wpred_combined0.csv"
+/* #define DATA_FILE "./wpred_idle.csv" */
+#define NR_FEAT     15
 
 #define m2d(x, i, j) (x)->values[i * (x)->ncol + j]
 #define m1d(x, i) (x)->values[i]
@@ -67,7 +67,7 @@ float forward_pass(struct matrix *input){
     dtype o1[10] = {0};
     dtype o2[10] = {0};
 
-    struct matrix W1 = {16, 10, w1};
+    struct matrix W1 = {NR_FEAT, 10, w1};
     struct matrix out1 = {1, 10, o1};
     struct matrix B1 = {1, 10, b1};
     struct matrix W2 = {10, 1, w2};

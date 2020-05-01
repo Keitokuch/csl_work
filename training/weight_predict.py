@@ -48,7 +48,8 @@ class Model():
     def predict(self, x):
         for layer in self.layers:
             x = layer.forward(x)
-        return 1 if x > 0.5 else 0
+        #  return 1 if x > 0.5 else 0
+        return x
 
 
 test_df = pd.read_csv(EVALUATE_FILE)[columns]
@@ -56,13 +57,16 @@ test_X = test_df[features].values
 test_y = test_df[label].values
 
 model = Model(weight_file)
-predictions = np.array(list(map(model.predict, test_X)))
+outputs = np.array(list(map(model.predict, test_X))).flatten()
+#  predictions = np.array(list(map(model.predict, test_X)))
+predictions = np.where(outputs > 0.5, 1, 0)
 correct = (predictions == test_y.flatten()).sum()
 total = len(test_y)
 print('Running', weight_file, 'on', EVALUATE_FILE)
 print(f'{correct} corrects out of {total}, accuracy: {correct / total :2f}')
 
 test_df['prediction'] = predictions
+test_df['output'] = outputs
 predict_ana(test_df)
 test_df.to_csv(f'wpred_{args.evaluate_tag}.csv', index=False)
 
