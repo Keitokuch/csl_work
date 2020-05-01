@@ -8,7 +8,7 @@ weight_file = 'pickle_' + tag + '.weights'
 try:
     fm = int(sys.argv[2])
 except:
-    fm = 1
+    fm = 2
 
 with open(weight_file, 'rb') as f:
     weights = pickle.load(f)
