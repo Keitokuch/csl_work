@@ -30,8 +30,6 @@ class FC():
 
     def forward(self, x):
         y = np.dot(x, self.weights) + self.bias
-        print()
-        print(x, self.weights, y)
         return np.maximum(y, 0, y) # ReLU
 
     def __repr__(self):
@@ -51,7 +49,6 @@ class Model():
     def predict(self, x):
         for layer in self.layers:
             x = layer.forward(x)
-        exit()
         return 1 if x > 0.5 else 0
 
 

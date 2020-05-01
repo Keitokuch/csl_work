@@ -17,6 +17,7 @@ if fm == 0:
                 print(', '.join([f'{f: 8f}' for f in line]))
             except:
                 print(line)
+        print()
 elif fm == 1:
     for weight_entry in weights:
         ret = []
