@@ -3,7 +3,8 @@
 
 #include "c_mlp.h"
 
-#define DATA_FILE "./wpred_combined0.csv"
+/* #define DATA_FILE "./wpred_combined0.csv" */
+#define DATA_FILE "./wpred_recover.csv"
 /* #define DATA_FILE "./wpred_idle.csv" */
 #define NR_FEAT     15
 

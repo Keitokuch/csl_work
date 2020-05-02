@@ -59,14 +59,24 @@ def keras_train(model_tag=None, dump=None):
     MODEL_FILE = 'model_' + model_tag + '.h5'
     DO_DUMP = dump or DO_DUMP
     DO_SAVE = DO_TRAIN and DO_SAVE or False
-    df = pd.read_csv(DATA_FILE)
-    head_df = df[:TEST_SIZE]
-    tail_df = df[-TEST_SIZE:]
-    head_X, head_y = head_df[features], head_df[label]
-    tail_X, tail_y = tail_df[features], tail_df[label]
+    DO_READ = X_val or DO_TRAIN
 
-    sum_acc = 0
+    if DO_READ:
+        df = pd.read_csv(DATA_FILE)
+        head_df = df[:TEST_SIZE]
+        tail_df = df[-TEST_SIZE:]
+        head_X, head_y = head_df[features], head_df[label]
+        tail_X, tail_y = tail_df[features], tail_df[label]
+        train_df, test_df = random_split(df, 0.1)
+        train_X = train_df[features]
+        train_y = train_df[label]
+        test_X = test_df[features]
+        test_y = test_df[label]
+        n_features = train_X.shape[1]
+        model = get_model(n_features)
+
     if X_val:
+        sum_acc = 0
         for time in range(X_val):
             train_df, test_df = random_split(df, 0.1)
             train_X = train_df[features]
@@ -82,19 +92,10 @@ def keras_train(model_tag=None, dump=None):
         print('avg acc', sum_acc / X_val)
         exit()
 
-    train_df, test_df = random_split(df, 0.1)
     if LOAD_EVALUATE:
         EVALUATE_SET = f'./post_{EVALUATE_TAG}.csv'
         extra_test_df = pd.read_csv(EVALUATE_SET)
 
-    train_X = train_df[features]
-    train_y = train_df[label]
-    test_X = test_df[features]
-    test_y = test_df[label]
-
-    n_features = train_X.shape[1]
-
-    model = get_model(n_features)
 
     print('Model', model_tag)
     print_config()
@@ -170,5 +171,7 @@ if __name__ == "__main__":
         EVALUATE_TAG = args.evaluate
         LOAD_EVALUATE = 1
         DO_LOAD = 1
+    else:
+        DO_EVALUATE = 0
 
     keras_train(model_tag=MODEL_TAG)
