@@ -13,6 +13,7 @@ X_val           = 0
 EPOCHS = 3
 BATCH_SIZE = 64
 
+exit()
 """ Features
 src_non_pref_nr,    delta_hot,      cpu_idle,       cpu_not_idle,   cpu_newly_idle,
 same_node,          prefer_src,     prefer_dst,     src_len,        src_load,
