@@ -19,3 +19,13 @@ def exec_process(cmdline, silent, input=None, **kwargs):
     if returncode != 0:
         raise RuntimeError('Got return value %d while executing "%s", stderr output was:\n%s' % (returncode, " ".join(cmdline), stderr.rstrip("\n")))
     return stdout
+
+
+def get_dmesg():
+   return exec_process(['dmesg'], True).decode('utf_8').split('\n')
+
+
+def get_syslog():
+    with open('/var/log/syslog') as f:
+        syslog = [line.strip() for line in f.readlines()]
+    return syslog
