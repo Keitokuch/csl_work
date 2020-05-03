@@ -28,4 +28,11 @@ def get_dmesg():
 def get_syslog():
     with open('/var/log/syslog') as f:
         syslog = [line.strip() for line in f.readlines()]
+
+    try:
+        with open('/var/log/syslog.1') as f:
+            syslog += [line.strip() for line in f.readlines()]
+    except:
+        pass
+
     return syslog

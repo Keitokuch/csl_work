@@ -1,7 +1,6 @@
 from utils import get_dmesg, get_syslog
 
-with open('/var/log/syslog') as f:
-    dmesg = f.readlines()
+dmesg = get_syslog()
 
 ori_sum = 0
 jc_sum = 0
