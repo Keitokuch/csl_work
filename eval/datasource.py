@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import logging
 import json
+import time
 
 logger = logging.getLogger('datasource')
 fhdlr = logging.FileHandler('write.log', mode='w')
@@ -37,6 +38,8 @@ class FuncLatencyDatasource(DataSource):
             except Exception as e:
                 print(e)
                 print(f"Failed to load json file {write_file}")
+        self.start_time = time.time()
+        self.start_len = len(self.entries)
 
     def update(self, event):
         self.entries.append(event.delta)
@@ -48,5 +51,8 @@ class FuncLatencyDatasource(DataSource):
             #  for row in self.entries:
             #      f.write(','.join(row) + '\n')
         print(f'{len(self.entries)} Entries written to file {self.write_file}')
+        delta_len = len(self.entries) - self.start_len
+        delta_time = time.time() - self.start_time
+        print(f'{delta_len} Entries collected in {delta_time:.2f}s. {delta_len/delta_time:.1f}/s')
         self.entries = []
         return 'Entries Dumped'
