@@ -11,15 +11,12 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--tag', help='tag for output')
 parser.add_argument('-o', '--output', help='output file name (overwrites -t)')
 parser.add_argument('-a', '--append', action='store_true', help='append to output')
-parser.add_argument('-s', '--write_size', type=int, action='store')
-parser.add_argument('--old', action='store_true', help='original kernel')
 args = parser.parse_args()
 
-write_file = args.output or args.tag and f'latency_{args.tag}.csv' or 'output.csv'
+write_file = args.output or args.tag and f'latency_{args.tag}.json' or 'output'
 
 cm_events = []
 latency_datasource = FuncLatencyDatasource(append=args.append,
-                                           write_size=args.write_size,
                                            write_file=write_file)
 
 bpf_text = "funclatency.c"

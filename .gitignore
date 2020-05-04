@@ -2,6 +2,8 @@
 # Created by https://www.gitignore.io/api/c,linux,macos
 # Edit at https://www.gitignore.io/?templates=c,linux,macos
 
+.*
+*.log
 ### C ###
 # Prerequisites
 *.d

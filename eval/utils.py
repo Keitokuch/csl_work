@@ -36,3 +36,10 @@ def get_syslog():
         pass
 
     return syslog
+
+def dump_list(li, fp):
+    fp.write(', '.join(list(map(str, li))))
+
+def load_list(fp, dtype=int):
+    li = fp.read().split(', ')
+    return [dtype(item) for item in li]
