@@ -33,7 +33,7 @@ class FuncLatencyDatasource(DataSource):
             try:
                 with open(write_file, 'r') as f:
                     self.entries = json.load(f)
-                print(f'{len(self.entries)} Entries loaded from file')
+                print(f'{len(self.entries)} Entries loaded from file {write_file}')
             except Exception as e:
                 print(e)
                 print(f"Failed to load json file {write_file}")
@@ -47,6 +47,6 @@ class FuncLatencyDatasource(DataSource):
             json.dump(self.entries, f)
             #  for row in self.entries:
             #      f.write(','.join(row) + '\n')
-        print(f'{len(self.entries)} Entries written to file')
+        print(f'{len(self.entries)} Entries written to file {self.write_file}')
         self.entries = []
         return 'Entries Dumped'

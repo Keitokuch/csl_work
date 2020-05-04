@@ -13,7 +13,7 @@ parser.add_argument('-o', '--output', help='output file name (overwrites -t)')
 parser.add_argument('-a', '--append', action='store_true', help='append to output')
 args = parser.parse_args()
 
-write_file = args.output or args.tag and f'latency_{args.tag}.json' or 'output'
+write_file = args.output or args.tag and f'latency_cm_{args.tag}.json' or 'output'
 
 cm_events = []
 latency_datasource = FuncLatencyDatasource(append=args.append,
