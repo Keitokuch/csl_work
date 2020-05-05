@@ -6,19 +6,23 @@ import sys
 import logging
 import argparse
 
+from datasource import FuncLatencyDatasource
+
 parser = argparse.ArgumentParser()
 parser.add_argument('-t', '--tag', help='tag for output')
 parser.add_argument('-o', '--output', help='output file name (overwrites -t)')
 parser.add_argument('-a', '--append', action='store_true', help='append to output')
+parser.add_argument('-v', '--verbose', action='store_true', help='print output')
 args = parser.parse_args()
 
 frequency = 800
+INTERVAL = 0.5
 
 write_file = args.output or args.tag and f'imbalance_{args.tag}.json' or 'imbalance.json'
 
 #  cm_events = []
-#  latency_datasource = FuncLatencyDatasource(append=args.append,
-#                                             write_file=write_file)
+imbalance_datasource = FuncLatencyDatasource(append=args.append,
+                                             write_file=write_file)
 
 bpf_text = "max_imbalance.c"
 
@@ -39,13 +43,14 @@ logger.addHandler(shdlr)
 hist = b.get_table("hist")
 while True:
     try:
-        sleep(0.5)
+        sleep(INTERVAL)
     except KeyboardInterrupt:
         exit()
 
     rqlen = [k.value for k, v in hist.items()]
-    print(rqlen)
-    maxlen, minlen = max(rqlen), min(rqlen)
-    imbalance = maxlen - minlen
-    print(imbalance)
+    imbalance = max(rqlen) - min(rqlen)
+    imbalance_datasource.update(imbalance)
+    if args.verbose:
+        print(rqlen)
+    print(imbalance, end=' ')
     hist.clear()
