@@ -20,7 +20,7 @@ parser.add_argument('-m', '--model', action='store')
 parser.add_argument('-t', '--thread', action='store', required=True)
 
 args = parser.parse_args()
-SAMPLE_SIZE = 1200000 if args.thread == '80' else 100000 if args.func == 'lb' else 30000
+SAMPLE_SIZE = 1200000 if args.thread == '80' else 100000
 FUNC_NAME = 'can_migrate_task' if args.func == 'cm' else 'load_balance'
 
 #  func = sys.argv[1]
