@@ -107,8 +107,8 @@ int do_perf_event()
 
     // Calculate run queue length by subtracting the currently running task,
     // if present. len 0 == idle, len 1 == one running task.
-    if (len > 0)
-        len--;
+    /* if (len > 0) */
+    /*     len--; */
 
     hist.increment(len);
 
