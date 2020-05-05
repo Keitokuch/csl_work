@@ -43,7 +43,7 @@ if args.model:
 
     n, bins, patches = plt.hist(imba, bins='auto', alpha=0.7, rwidth=1)
     print(n)
-    plt.xticks(np.arange(min(imba), max(imba)+1, 1.0))
+    plt.xticks(np.arange(min(imba), max(imba)+1, 2.0))
     plt.grid(axis='y', alpha=0.6)
     plt.xlabel('Max Imbalance (jobs)')
     plt.ylabel('Frequency')
