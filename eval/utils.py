@@ -25,8 +25,8 @@ def get_dmesg():
    return exec_process(['dmesg'], True).decode('utf_8').split('\n')
 
 
-def get_syslog():
-    with open('/var/log/syslog') as f:
+def get_syslog(syslog='/var/log/syslog'):
+    with open(syslog) as f:
         syslog = [line.strip() for line in f.readlines()]
 
     try:
