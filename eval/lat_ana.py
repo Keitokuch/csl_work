@@ -1,5 +1,4 @@
 import json
-import matplotlib.pyplot as plt
 import pandas as pd
 import sys
 import numpy as np
