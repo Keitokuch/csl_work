@@ -10,7 +10,7 @@ def read_series(filename):
     with open(filename, 'r') as f:
         series = pd.Series(json.load(f))
     z_scores = zscore(series)
-    filtered = np.abs(z_scores) < 5
+    filtered = np.abs(z_scores) < 3
     return series[filtered]
 
 
@@ -20,20 +20,23 @@ parser.add_argument('-s', '--size', action='store')
 
 args = parser.parse_args()
 
-#  SAMPLE_SIZE = args.size or 2500
+SAMPLE_SIZE = args.size or 6500
 
 #  func = sys.argv[1]
 #  model = sys.argv[2]
 #  th = sys.argv[3]
-def plot_hist(data, bins, color, label, alpha=0.65):
+def plot_hist(data, bins, color, label, alpha=0.7):
     avg = data.mean()
     std = data.std()
-    label = f'{label}\nmean={avg:.0f},std={std:.0f}'
+    label = f'{label}\nmean={avg:.2f},std={std:.2f}'
     n, bins, patches = plt.hist(data, bins=bins, color=color, alpha=alpha, label=label)
     plt.axvline(avg, color=color, linestyle='-', linewidth=1, alpha=alpha+0.2)
     plt.axvline(avg+std, color=color, linestyle='--', linewidth=1, alpha=alpha)
     plt.axvline(avg-std, color=color, linestyle='--', linewidth=1, alpha=alpha)
     return n, bins, patches
+
+def plot_hist2(data, label, alpha=0.85):
+    plt.hist(data, bins='auto', alpha=alpha, label=label)
 
 if args.model:
     filename = f'imbalance_{args.model}.json'
@@ -51,18 +54,20 @@ if args.model:
     plt.show()
 else:
     data = []
-    for model in ['mlp', 'linux']:
+    for model in ['linux', 'mlp']:
         filename = f'imbalance_{model}.json'
         imba = read_series(filename).sample(SAMPLE_SIZE)
         print(model, len(imba))
         data.append(imba)
     #  bins = SAMPLE_SIZE // 5000
-    n, bins, _ = plot_hist(data[1], bins='auto', color='tab:blue', label='Linux')
-    plot_hist(data[0], bins=bins, color='tab:orange', label='ML')
+    plot_hist2(data, label=['Linux', 'ML'])
+    #  bins = 'auto'
+    #  _, _, _ = plot_hist(data[0], bins=bins, color='tab:blue', label='Linux')
+    #  plot_hist(data[1], bins=bins, color='tab:orange', label='ML')
     plt.xlim(right=max(data[0].max(), data[1].max()))
     plt.grid(axis='y', alpha=0.4)
     plt.legend(fontsize='small')
-    plt.xlabel('Max Imbalance (ns)')
+    plt.xlabel('Max Imbalance (jobs)')
     plt.ylabel('Frequency')
     plt.title('Histogram of Max Imbalance of models')
 
