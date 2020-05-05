@@ -12,7 +12,7 @@ parser.add_argument('-o', '--output', help='output file name (overwrites -t)')
 parser.add_argument('-a', '--append', action='store_true', help='append to output')
 args = parser.parse_args()
 
-frequency = 500
+frequency = 800
 
 write_file = args.output or args.tag and f'imbalance_{args.tag}.json' or 'imbalance.json'
 
@@ -43,7 +43,7 @@ while True:
     except KeyboardInterrupt:
         exit()
 
-    rqlen = [k.value for k in hist]
+    rqlen = [k.value for k, v in hist.items()]
     print(rqlen)
     maxlen, minlen = max(rqlen), min(rqlen)
     imbalance = maxlen - minlen
