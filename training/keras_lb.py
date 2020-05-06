@@ -51,7 +51,7 @@ def get_model(input_dim):
     return model
 
 
-def keras_train(model_tag=None, dump=None):
+def keras_train(model_tag=None, dump=None, plot_loss=False):
     global EVALUATE_TAG, EVALUATE_SET, DO_DUMP, DO_SAVE
     model_tag = model_tag or 'default'
     DATA_FILE = './post_' + model_tag + '.csv'
@@ -119,6 +119,8 @@ def keras_train(model_tag=None, dump=None):
     #final 10-relu batch32-split0.1-epoch3
     if DO_TRAIN:
         model.fit(train_X, train_y, batch_size=BATCH_SIZE, validation_split=0.1, epochs=EPOCHS)
+    if plot_loss:
+        print(model.history.keys())
     if DO_SAVE:
         model.save_weights(WEIGHT_FILE)
         model.save(MODEL_FILE)
@@ -160,6 +162,7 @@ if __name__ == "__main__":
     parser.add_argument('-t', '--train', action='store_true')
     parser.add_argument('-l', '--load', action='store_true')
     parser.add_argument('-d', '--dump', action='store_true')
+    parser.add_argument('-p', '--plot', action='store_true')
 
     args = parser.parse_args()
     MODEL_TAG = args.object or MODEL_TAG
@@ -174,4 +177,4 @@ if __name__ == "__main__":
     else:
         DO_EVALUATE = 0
 
-    keras_train(model_tag=MODEL_TAG)
+    keras_train(model_tag=MODEL_TAG, plot_loss=args.plot)
