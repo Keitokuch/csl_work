@@ -36,7 +36,9 @@ def plot_hist(data, bins, color, label, alpha=0.7):
     return n, bins, patches
 
 def plot_hist2(data, label, alpha=0.85):
-    plt.hist(data, bins='auto', alpha=alpha, label=label)
+    bins = range(np.max(data))
+    n, bins, _ = plt.hist(data, bins=bins, density=True, alpha=alpha, label=label)
+    print(n, bins)
 
 if args.model:
     filename = f'imbalance_{args.model}.json'

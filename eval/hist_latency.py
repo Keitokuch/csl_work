@@ -30,7 +30,8 @@ def plot_hist(data, bins, color, label, alpha=0.65):
     avg = data.mean()
     std = data.std()
     label = f'{label}\nmean={avg:.0f},std={std:.0f}'
-    n, bins, patches = plt.hist(data, bins=bins, color=color, alpha=alpha, label=label)
+    n, bins, patches = plt.hist(data, bins=bins, density=True, color=color, alpha=alpha, label=label)
+    plt.xscale('log')
     plt.axvline(avg, color=color, linestyle='-', linewidth=1, alpha=alpha+0.2)
     plt.axvline(avg+std, color=color, linestyle='--', linewidth=1, alpha=alpha)
     plt.axvline(avg-std, color=color, linestyle='--', linewidth=1, alpha=alpha)
@@ -53,10 +54,10 @@ else:
     data = []
     for model in ['mlp', 'linux']:
         filename = f'latency_{args.func}_{model}{args.thread}.json'
-        latencies = read_series(filename).sample(SAMPLE_SIZE)
+        latencies = read_series(filename) #.sample(SAMPLE_SIZE)
         print(model, len(latencies))
         data.append(latencies)
-    bins = SAMPLE_SIZE // 5000
+    bins = 300
     _, _, _ = plot_hist(data[1], bins=bins, color='tab:blue', label='Linux')
     plot_hist(data[0], bins=bins, color='tab:orange', label='ML')
     plt.xlim(right=max(data[0].max(), data[1].max()))

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+#  os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation
@@ -12,9 +12,32 @@ import pickle
 from training_config import features, label
 from keras_conf import *
 from predict_ana import predict_ana
+from tensorflow.keras.callbacks import EarlyStopping
 
-tf.get_logger().setLevel('ERROR')
-pd.options.mode.chained_assignment = None
+#  tf.get_logger().setLevel('ERROR')
+#  pd.options.mode.chained_assignment = None
+from tensorflow.keras.callbacks import Callback
+
+class Histories(Callback):
+    DUMP_DELTA=60
+    def on_train_begin(self,logs={}):
+        self.losses = []
+        self.accuracies = []
+        self.dump_cd = 10
+        self.batches = []
+        self.batch = 0
+
+    def on_batch_end(self, batch, logs={}):
+        self.dump_cd -= 1
+        self.batch += 1
+        if self.dump_cd == 0:
+            self.losses.append(logs.get('loss'))
+            self.accuracies.append(logs.get('acc'))
+            self.dump_cd = self.DUMP_DELTA
+            self.batches.append(self.batch)
+
+
+early_stop = EarlyStopping(min_delta=0.00005)
 
 
 def print_config():
@@ -45,8 +68,8 @@ def get_model(input_dim):
     #  model.add(Dense(5, activation='relu'))
     model.add(Dense(1))
     sgd = optimizers.SGD()
-    rmsprop = optimizers.RMSprop(learning_rate=0.001, rho=0.9)
-    adam = optimizers.Adam()
+    rmsprop = optimizers.RMSprop(learning_rate=0.001, rho=0.9, decay=0.01)
+    adam = optimizers.Adam(learning_rate=0.0005, decay=0.000003)
     model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
@@ -110,17 +133,18 @@ def keras_train(model_tag=None, dump=None, plot_loss=False):
                 print('load model failed')
                 pass
 
-
-    #  for lay in weights:
-    #      print(len(lay), type(lay[0]))
-    #  first = weights[0]
-    #  print(first[0])
-
     #final 10-relu batch32-split0.1-epoch3
     if DO_TRAIN:
-        model.fit(train_X, train_y, batch_size=BATCH_SIZE, validation_split=0.1, epochs=EPOCHS)
-    if plot_loss:
-        print(model.history.keys())
+        if plot_loss:
+            histories = Histories()
+            history = model.fit(train_X, train_y, batch_size=BATCH_SIZE,
+                                validation_split=0.1, epochs=10, callbacks=[early_stop, histories])
+            import matplotlib.pyplot as plt
+            plt.plot(histories.batches, histories.losses)
+            #  plt.yscale('log')
+            plt.show()
+        else:
+            model.fit(train_X, train_y, batch_size=BATCH_SIZE, validation_split=0.1, epochs=EPOCHS)
     if DO_SAVE:
         model.save_weights(WEIGHT_FILE)
         model.save(MODEL_FILE)
