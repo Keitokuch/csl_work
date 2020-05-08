@@ -16,7 +16,7 @@ args = parser.parse_args()
 
 write_file = args.output or args.tag and f'runqlen_{args.tag}.json' or 'runqlen_output.json'
 
-frequency = 300
+frequency = 800
 
 bpf_text = 'sample_qlen.c'
 
@@ -32,6 +32,7 @@ if args.append:
             hist_rqlen = Counter(json.load(f))
         print('Loaded from old histogram')
     except:
+        hist_rqlen = Counter()
         print('Didn\'t load old histogram')
 else:
     hist_rqlen = Counter()
