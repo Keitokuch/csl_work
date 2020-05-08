@@ -14,7 +14,7 @@ parser.add_argument('-s', '--write_size', type=int, action='store')
 parser.add_argument('--old', action='store_true', help='original kernel')
 args = parser.parse_args()
 
-write_file = args.output or args.tag and f'runqlen_{args.tag}.csv' or 'runqlen_output.csv'
+write_file = args.output or args.tag and f'runqlen_{args.tag}.json' or 'runqlen_output.json'
 
 frequency = 300
 
