@@ -40,7 +40,8 @@ def plot_hist(data, bins, color, label, alpha=0.65):
 if args.model:
     filename = f'latency_{args.func}_{args.model}{args.thread}.json'
 
-    latencies = read_series(filename).sample(SAMPLE_SIZE)
+    #  latencies = read_series(filename).sample(SAMPLE_SIZE)
+    latencies = read_series(filename)
 
     n, bins, patches = plt.hist(x=latencies, bins='auto', color='#0504aa',
                                 alpha=0.7, rwidth=1)
