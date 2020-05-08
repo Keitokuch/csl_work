@@ -24,7 +24,7 @@ write_file = args.output or args.tag and f'imbalance_{args.tag}.json' or 'imbala
 imbalance_datasource = MaxImbalanceDatasource(append=args.append,
                                              write_file=write_file)
 
-bpf_text = "max_imbalance.c"
+bpf_text = "sample_qlen.c"
 
 # initialize BPF & probes
 b = BPF(src_file=bpf_text)

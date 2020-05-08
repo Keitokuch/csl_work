@@ -56,48 +56,6 @@ struct cfs_bandwidth {
 #endif
 };
 
-/* Task group related information */
-struct task_group {
-	struct cgroup_subsys_state css;
-
-#ifdef CONFIG_FAIR_GROUP_SCHED
-	/* schedulable entities of this group on each CPU */
-	struct sched_entity	**se;
-	/* runqueue "owned" by this group on each CPU */
-	struct cfs_rq		**cfs_rq;
-	unsigned long		shares;
-
-#ifdef	CONFIG_SMP
-	/*
-	 * load_avg can be heavily contended at clock tick time, so put
-	 * it in its own cacheline separated from the fields above which
-	 * will also be accessed at each tick.
-	 */
-	atomic_long_t		load_avg ____cacheline_aligned;
-#endif
-#endif
-
-#ifdef CONFIG_RT_GROUP_SCHED
-	struct sched_rt_entity	**rt_se;
-	struct rt_rq		**rt_rq;
-
-	struct rt_bandwidth	rt_bandwidth;
-#endif
-
-	struct rcu_head		rcu;
-	struct list_head	list;
-
-	struct task_group	*parent;
-	struct list_head	siblings;
-	struct list_head	children;
-
-#ifdef CONFIG_SCHED_AUTOGROUP
-	struct autogroup	*autogroup;
-#endif
-
-	struct cfs_bandwidth	cfs_bandwidth;
-};
-
 struct lb_env {
 	struct sched_domain	*sd;
 
@@ -345,11 +303,13 @@ struct rq {
 	/* runqueue lock: */
 	raw_spinlock_t lock;
 
+#ifdef CONFIG_JC_SCHED_PERF
     struct perf_event *pe_0;
     struct perf_event *pe_1;
 
     u64 perf_count_0;
     u64 perf_count_1;
+#endif
 
 	/*
 	 * nr_running and cpu_load should be in the same cacheline because
