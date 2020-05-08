@@ -43,7 +43,7 @@ void *fibo(void *x) {
     pthread_attr_t attr;
     pthread_t thread1, thread2;
 
-    printf("fibo %lu\n", n);
+    /* printf("fibo %lu\n", n); */
     pthread_attr_init(&attr);
     pthread_create(&thread1, &attr, fibo, (void *)(n-1));
     pthread_create(&thread2, &attr, fibo, (void *)(n-2));
