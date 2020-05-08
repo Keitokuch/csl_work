@@ -74,8 +74,8 @@ else:
     plt.grid(axis='y', alpha=0.4)
     plt.yscale('log')
     plt.legend(fontsize='small')
-    plt.xlabel('Max Imbalance (jobs)')
-    plt.ylabel('Frequency')
-    plt.title('Histogram of Max Imbalance of models')
+    plt.xlabel('Number of Running Jobs')
+    plt.ylabel('Density')
+    plt.title('Distribution of Runqueue Length')
 
     plt.show()
