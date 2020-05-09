@@ -3,12 +3,28 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
-#include "fixedptc.h"
+typedef int64_t fxdpt_t;
+typedef __int128 fxdpt_ext;
 
-#define dtype fixedpt
+#define FXDPT_WL 64
 
-#define todtype(F) fixedpt_rconst(F)
+#define FXDPT_FBITS 20
+#define FXDPT_IBITS (FXDPT_WL - FXDPT_FBITS)
+
+#define dtype fxdpt_t
+
+#define FXDPT_ONE ((fxdpt_t)((fxdpt_t)1 << FXDPT_FBITS))
+
+#define flt_to_fxd(F) ((fxdpt_t)((F) * FXDPT_ONE + ((F) >= 0? 0.5 : -0.5))) 
+
+#define fxdpt_mul(A, B)        \
+	((fxdpt_t)(((fxdpt_ext)(A) * (fxdpt_ext)(B)) >> FXDPT_FBITS))
+
+#define tofloat(T) ((float) ((T)*((float)(1)/(float)(1L << FXDPT_FBITS))))
+
+#define todtype(F) flt_to_fxd(F)
 
 /*
 dtype w1[] = {

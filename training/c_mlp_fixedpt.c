@@ -26,7 +26,7 @@ int matmul(struct matrix *X, struct matrix *Y, struct matrix *Z)
         for(j = 0; j < Y->ncol; j++)
             for(k = 0; k < X->ncol; k++)
             {
-                m2d(Z, i, j) = fixedpt_add(m2d(Z, i, j), fixedpt_mul(m2d(X, i, k), m2d(Y, k, j)));
+                m2d(Z, i, j) = m2d(Z, i, j) + fxdpt_mul(m2d(X, i, k), m2d(Y, k, j));
             }
     return 0;
 }
@@ -35,7 +35,7 @@ int matadd(struct matrix *X, struct matrix *Y, struct matrix *Z)
 {
     int i;
     for (i = 0; i < X->nrow * X->ncol; i++) {
-        Z->values[i] = fixedpt_add(X->values[i], Y->values[i]);
+        Z->values[i] =X->values[i] + Y->values[i];
     }
 }
 
@@ -48,7 +48,7 @@ void print_matrix(struct matrix *X)
         printf("\n\t");
         for(j=0; j<X->ncol;j++)
         {
-            printf("%f\t", fixedpt_tofloat(m2d(X, i, j)));
+            printf("%f\t", tofloat(m2d(X, i, j)));
         }
     }
     printf("\n");
@@ -131,7 +131,7 @@ int main()
         }
         if (py_pred == label)
             py_correct++;
-        printf("%d %d %d %f\n", label, py_pred, prediction, fixedpt_tofloat(output));
+        /* printf("%d %d %d %f\n", label, py_pred, prediction, tofloat(output)); */
     }
 
     printf("%d corrects out of %d. accuracy: %f\n", correct, total, (float)correct / total);
