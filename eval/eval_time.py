@@ -1,6 +1,10 @@
 from utils import get_dmesg, get_syslog
+import sys
 
-dmesg = get_syslog()
+if len(sys.argv) > 1:
+    dmesg = get_syslog(sys.argv[1])
+else:
+    dmesg = get_syslog()
 
 ori_sum = 0
 jc_sum = 0

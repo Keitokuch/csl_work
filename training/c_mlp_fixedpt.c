@@ -63,8 +63,8 @@ void ReLU(struct matrix *X)
     }
 }
 
-float forward_pass(struct matrix *input){
-    float output;
+dtype forward_pass(struct matrix *input){
+    dtype output;
     dtype o1[10] = {0};
     dtype o2[10] = {0};
 
@@ -131,7 +131,7 @@ int main()
         }
         if (py_pred == label)
             py_correct++;
-        /* printf("%d %d %d %f\n", label, py_pred, prediction, tofloat(output)); */
+        printf("%d %d %d %f\n", label, py_pred, prediction, tofloat(output));
     }
 
     printf("%d corrects out of %d. accuracy: %f\n", correct, total, (float)correct / total);
