@@ -29,11 +29,11 @@ def get_syslog(syslog='/var/log/syslog'):
     with open(syslog) as f:
         syslog = [line.strip() for line in f.readlines()]
 
-    try:
-        with open('/var/log/syslog.1') as f:
-            syslog += [line.strip() for line in f.readlines()]
-    except:
-        pass
+    #  try:
+    #      with open('/var/log/syslog.1') as f:
+    #          syslog += [line.strip() for line in f.readlines()]
+    #  except:
+    #      pass
 
     return syslog
 
