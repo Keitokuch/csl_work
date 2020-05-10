@@ -53,7 +53,7 @@ while True:
     imbalance_datasource.update(imbalance)
     if args.verbose:
         print(rqlen)
-    print(imbalance, end=' ')
+        print(imbalance, end=' ')
     hist.clear()
     if exiting:
         print(imbalance_datasource.dump())

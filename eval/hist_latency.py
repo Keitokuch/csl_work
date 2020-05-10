@@ -27,10 +27,12 @@ args.thread = args.thread or '80'
 right = 6000 if args.func == 'cm' else 100000
 top = 0.0015 if args.func == 'cm' else 0.00011
 nr_bin = 100
+bins = range(0, right, right // nr_bin)
 
 colors = ['tab:blue', 'tab:orange', 'tab:pink']
 labels = ['Linux', 'MLP Floating Point', 'MLP Fixed Point']
 titles = ['Linux', 'MLP in Floating Point', 'MLP in Fixed Point']
+tags = ['linux', 'mlp', 'fxdpt']
 
 
 #  func = sys.argv[1]
@@ -70,7 +72,6 @@ if args.model:
     latencies = read_series(filename)
 
     plt.grid(axis='y', alpha=0.75)
-    bins = range(0, right, right // nr_bin)
     plot_hist(plt, latencies, bins=bins, color=color, label=tag)
     plt.xlim(right=right)
     plt.ylim(top=top)
@@ -81,20 +82,30 @@ if args.model:
     plt.ylabel('Density')
     plt.show()
 elif args.split:
-    filename = f'latency_{args.func}_linux80.json'
-    latencies = read_series(filename)
+    plt.figure(1)
     fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey='row')
-    nr_bin = 100
-    bins = range(0, right, right // nr_bin)
     data = []
-    for model in ['linux', 'MLP', 'fxdpt']:
-        filename = f'latency_{args.func}_{model}{args.thread}.json'
+    for model in tags:
+        filename = f'latency_cm_{model}{args.thread}.json'
         latencies = read_series(filename) #.sample(SAMPLE_SIZE)
         print(model, len(latencies))
         data.append(latencies)
-    n, bins, _ = plot_hist(axes[0], data[0], bins=bins, color='tab:blue', label='Linux')
-    plot_hist(axes[1], data[1], bins=bins, color='tab:orange', label='MLP Floating Point')
-    plot_hist(axes[2], data[2], bins=bins, color='tab:pink', label='MLP Fixed Point')
+    for i in range(3):
+        plot_hist(axes[i], data[i], bins=bins, color=colors[i], label=labels[i])
+    fig.suptitle('Latency of function {}'.format(FUNC_NAME))
+    axes[1].set_xlabel('Latency (ns)')
+    axes[0].set_ylabel('Density')
+
+    plt.figure(1)
+    fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey='row')
+    data = []
+    for model in tags:
+        filename = f'latency_lb_{model}{args.thread}.json'
+        latencies = read_series(filename) #.sample(SAMPLE_SIZE)
+        print(model, len(latencies))
+        data.append(latencies)
+    for i in range(3):
+        plot_hist(axes[i+3], data[i+3], bins=bins, color=colors[i], label=labels[i])
     fig.suptitle('Latency of function {}'.format(FUNC_NAME))
     axes[1].set_xlabel('Latency (ns)')
     axes[0].set_ylabel('Density')
