@@ -56,13 +56,13 @@ if args.model:
     plt.show()
 else:
     data = []
-    for model in ['linux', 'mlp']:
+    for model in ['linux', 'mlp', 'fxdpt']:
         filename = f'imbalance_{model}.json'
         imba = read_series(filename).sample(SAMPLE_SIZE)
         print(model, len(imba))
         data.append(imba)
     #  bins = SAMPLE_SIZE // 5000
-    plot_hist2(data, label=['Linux', 'ML'])
+    plot_hist2(data, label=['Linux', 'ML', 'Fxdpt'])
     #  bins = 'auto'
     #  _, _, _ = plot_hist(data[0], bins=bins, color='tab:blue', label='Linux')
     #  plot_hist(data[1], bins=bins, color='tab:orange', label='ML')
