@@ -42,7 +42,7 @@ def plot_hist2(data, label, alpha=0.85):
     print(n, bins)
 
 if args.model:
-    filename = f'imbalance_{args.model}.json'
+    filename = f'runqlen_{args.model}.json'
 
     #  imba = read_series(filename).sample(SAMPLE_SIZE)
     imba = read_series(filename)
@@ -57,7 +57,7 @@ if args.model:
     plt.show()
 else:
     hists = []
-    for model in ['linux', 'mlp']:
+    for model in ['linux-fx', 'fxdpt']:
         filename = f'runqlen_{model}.json'
         hist_runqlen = read_dict(filename)
         hists.append(hist_runqlen)
@@ -67,14 +67,14 @@ else:
     #  bins = 'auto'
     plt.bar(bins, hists[0].values(), width, color='tab:blue', alpha=0.85, label='Linux')
     plt.bar([k + width for k in hists[1].keys()], hists[1].values(), width,
-            color='tab:orange', alpha=0.6, label='ML')
+            color='tab:orange', alpha=0.6, label='MLP')
 
     #  plt.hist(*hists[1].items(), bins=bins, color='tab:orange', label='ML')
     #  plt.xlim(right=max(data[0].max(), data[1].max()))
     plt.grid(axis='y', alpha=0.4)
     plt.yscale('log')
     plt.legend(fontsize='small')
-    plt.xlabel('Number of Running Jobs')
+    plt.xlabel('Number of Runnable Jobs')
     plt.ylabel('Density')
     plt.title('Distribution of Runqueue Length')
 
