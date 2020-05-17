@@ -65,9 +65,10 @@ else:
     width = 0.4
     #  bins = SAMPLE_SIZE // 5000
     #  bins = 'auto'
-    plt.bar(bins, hists[0].values(), width, color='tab:blue', alpha=0.85, label='Linux')
+    alpha = 0.9
+    plt.bar(bins, hists[0].values(), width, color='tab:blue', alpha=alpha, label='Linux')
     plt.bar([k + width for k in hists[1].keys()], hists[1].values(), width,
-            color='tab:orange', alpha=0.6, label='MLP')
+            color='tab:orange', alpha=alpha, label='ML')
 
     #  plt.hist(*hists[1].items(), bins=bins, color='tab:orange', label='ML')
     #  plt.xlim(right=max(data[0].max(), data[1].max()))
@@ -76,6 +77,6 @@ else:
     plt.legend(fontsize='small')
     plt.xlabel('Number of Runnable Jobs')
     plt.ylabel('Density')
-    plt.title('Distribution of Runqueue Length')
+    plt.title('Distribution of Run-queue Length')
 
     plt.show()

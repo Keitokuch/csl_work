@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import os
-#  os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Activation
@@ -14,12 +14,12 @@ from keras_conf import *
 from predict_ana import predict_ana
 from tensorflow.keras.callbacks import EarlyStopping
 
-#  tf.get_logger().setLevel('ERROR')
-#  pd.options.mode.chained_assignment = None
+tf.get_logger().setLevel('ERROR')
+pd.options.mode.chained_assignment = None
 from tensorflow.keras.callbacks import Callback
 
 class Histories(Callback):
-    DUMP_DELTA=60
+    DUMP_DELTA=100
     def on_train_begin(self,logs={}):
         self.losses = []
         self.accuracies = []
@@ -37,7 +37,7 @@ class Histories(Callback):
             self.batches.append(self.batch)
 
 
-early_stop = EarlyStopping(min_delta=0.00005)
+early_stop = EarlyStopping()
 
 
 def print_config():
@@ -67,9 +67,9 @@ def get_model(input_dim):
     model.add(Dense(10, activation='relu', input_dim=input_dim))
     #  model.add(Dense(5, activation='relu'))
     model.add(Dense(1))
-    sgd = optimizers.SGD()
-    rmsprop = optimizers.RMSprop(learning_rate=0.001, rho=0.9, decay=0.01)
-    adam = optimizers.Adam(learning_rate=0.0005, decay=0.000003)
+    #  sgd = optimizers.SGD()
+    #  rmsprop = optimizers.RMSprop(learning_rate=0.001, rho=0.9, decay=0.01)
+    adam = optimizers.Adam(learning_rate=0.0007, decay=0.000003)
     model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
@@ -100,6 +100,7 @@ def keras_train(model_tag=None, dump=None, plot_loss=False):
 
     if X_val:
         sum_acc = 0
+        sum_loss = 0
         for time in range(X_val):
             train_df, test_df = random_split(df, 0.1)
             train_X = train_df[features]
@@ -108,11 +109,14 @@ def keras_train(model_tag=None, dump=None, plot_loss=False):
             test_y = test_df[label]
             n_features = train_X.shape[1]
             model = get_model(n_features)
-            model.fit(train_X, train_y, batch_size=BATCH_SIZE, validation_split=0.1, epochs=EPOCHS)
+            model.fit(train_X, train_y, batch_size=BATCH_SIZE, validation_split=0.1,
+                      epochs=100, callbacks=[early_stop])
             loss, acc = model.evaluate(test_X, test_y)
             sum_acc += acc
+            sum_loss += loss
             print(time, loss, acc, sum_acc / (time+1))
         print('avg acc', sum_acc / X_val)
+        print('avg loss', sum_loss / X_val)
         exit()
 
     if LOAD_EVALUATE:
@@ -138,9 +142,12 @@ def keras_train(model_tag=None, dump=None, plot_loss=False):
         if plot_loss:
             histories = Histories()
             history = model.fit(train_X, train_y, batch_size=BATCH_SIZE,
-                                validation_split=0.1, epochs=10, callbacks=[early_stop, histories])
+                                validation_split=0.1, epochs=100, callbacks=[early_stop, histories])
             import matplotlib.pyplot as plt
             plt.plot(histories.batches, histories.losses)
+            plt.title("Training history of loss vs. batches")
+            plt.xlabel('Training batches')
+            plt.ylabel('Loss')
             #  plt.yscale('log')
             plt.show()
         else:

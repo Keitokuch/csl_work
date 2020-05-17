@@ -15,7 +15,7 @@ def read_series(filename):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('func', action='store')
+parser.add_argument('-f', '--func', action='store')
 parser.add_argument('-m', '--model', action='store')
 parser.add_argument('-t', '--thread', action='store')
 parser.add_argument('-s', '--split', action='store_true')
@@ -30,9 +30,9 @@ nr_bin = 100
 bins = range(0, right, right // nr_bin)
 
 colors = ['tab:blue', 'tab:orange', 'tab:pink']
-labels = ['Linux', 'MLP Floating Point', 'MLP Fixed Point']
-titles = ['Linux', 'MLP in Floating Point', 'MLP in Fixed Point']
-tags = ['linux', 'mlp', 'fxdpt']
+labels = ['Linux', 'MLP Fixed-Point', 'MLP Floating-Point']
+titles = ['Linux', 'MLP in Fixed-Point', 'MLP in Floating-Point']
+tags = ['linux', 'fxdpt', 'mlp']
 
 
 #  func = sys.argv[1]
@@ -82,8 +82,50 @@ if args.model:
     plt.ylabel('Density')
     plt.show()
 elif args.split:
-    plt.figure(1)
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey='row')
+    #  right = 6000
+    #  top = 0.0015
+    #  bins = range(0, right, right // nr_bin)
+    #  FUNC_NAME = 'can_migrate_task'
+    #  fig = plt.figure(figsize=(16, 4.5))
+    #  #  fig, axes = f.subplots(1, 3, figsize=(16, 5), sharey='row')
+    #  axes = fig.subplots(nrows=1, ncols=3, sharey='row')
+    #  data = []
+    #  for model in tags:
+    #      filename = f'latency_cm_{model}{args.thread}.json'
+    #      latencies = read_series(filename) #.sample(SAMPLE_SIZE)
+    #      print(model, len(latencies))
+    #      data.append(latencies)
+    #  for i in range(3):
+    #      plot_hist(axes[i], data[i], bins=bins, color=colors[i], label=labels[i])
+    #  fig.suptitle('Latency of function {}'.format(FUNC_NAME))
+    #  axes[1].set_xlabel('Latency (ns)')
+    #  axes[0].set_ylabel('Density')
+
+    #  right = 100000
+    #  top = 0.00011
+    #  bins = range(0, right, right // nr_bin)
+    #  FUNC_NAME = 'load_balance'
+    #  fig = plt.figure(figsize=(16, 4.5))
+    #  #  fig, axes = f.subplots(1, 3, figsize=(16, 5), sharey='row')
+    #  axes = fig.subplots(nrows=1, ncols=3, sharey='row')
+    #  data = []
+    #  for model in tags:
+    #      filename = f'latency_lb_{model}{args.thread}.json'
+    #      latencies = read_series(filename) #.sample(SAMPLE_SIZE)
+    #      print(model, len(latencies))
+    #      data.append(latencies)
+    #  for i in range(3):
+    #      plot_hist(axes[i], data[i], bins=bins, color=colors[i], label=labels[i])
+    #  fig.suptitle('Latency of function {}'.format(FUNC_NAME))
+    #  axes[1].set_xlabel('Latency (ns)')
+    #  axes[0].set_ylabel('Density')
+
+    fig, axes = plt.subplots(3, 2, figsize=(10, 10), sharey='col', sharex='col')
+    #  fig.suptitle('Latency distribution of kernel load balancing functions')
+    right = 6000
+    top = 0.0015
+    bins = range(0, right, right // nr_bin)
+    FUNC_NAME = 'can_migrate_task()'
     data = []
     for model in tags:
         filename = f'latency_cm_{model}{args.thread}.json'
@@ -91,13 +133,15 @@ elif args.split:
         print(model, len(latencies))
         data.append(latencies)
     for i in range(3):
-        plot_hist(axes[i], data[i], bins=bins, color=colors[i], label=labels[i])
-    fig.suptitle('Latency of function {}'.format(FUNC_NAME))
-    axes[1].set_xlabel('Latency (ns)')
-    axes[0].set_ylabel('Density')
+        plot_hist(axes[i][0], data[i], bins=bins, color=colors[i], label=labels[i])
+        axes[i, 0].set_ylabel('Density')
+    axes[2][0].set_xlabel('Latency (ns)')
+    axes[0][0].set_title(FUNC_NAME)
 
-    plt.figure(1)
-    fig, axes = plt.subplots(1, 3, figsize=(16, 5), sharey='row')
+    right = 100000
+    top = 0.00011
+    bins = range(0, right, right // nr_bin)
+    FUNC_NAME = 'load_balance()'
     data = []
     for model in tags:
         filename = f'latency_lb_{model}{args.thread}.json'
@@ -105,16 +149,16 @@ elif args.split:
         print(model, len(latencies))
         data.append(latencies)
     for i in range(3):
-        plot_hist(axes[i+3], data[i+3], bins=bins, color=colors[i], label=labels[i])
-    fig.suptitle('Latency of function {}'.format(FUNC_NAME))
-    axes[1].set_xlabel('Latency (ns)')
-    axes[0].set_ylabel('Density')
+        plot_hist(axes[i][1], data[i], bins=bins, color=colors[i], label=labels[i])
+    axes[2][1].set_xlabel('Latency (ns)')
+    axes[0][1].set_title(FUNC_NAME)
 
-    for i in range(3):
-        axes[i].set_title(titles[i])
-        axcdf = axes[i].twinx()
-        axcdf.hist(data[i], bins=1000, density=True, cumulative=True,
-                   histtype='step', alpha=0.8, color='blue')
+    #  for i in range(3):
+    #      axes[i].set_title(titles[i])
+    #      axcdf = axes[i].twinx()
+    #      axcdf.hist(data[i], bins=1000, density=True, cumulative=True,
+    #                 histtype='step', alpha=0.8, color='blue')
+    #  fig.tight_layout()
     plt.show()
 
 else:
