@@ -8,6 +8,7 @@ from tensorflow.keras.layers import Dense, Activation
 from tensorflow.keras import optimizers
 import os.path
 import pickle
+import json
 
 from training_config import features, label
 from keras_conf import *
@@ -69,7 +70,7 @@ def get_model(input_dim):
     model.add(Dense(1))
     #  sgd = optimizers.SGD()
     #  rmsprop = optimizers.RMSprop(learning_rate=0.001, rho=0.9, decay=0.01)
-    adam = optimizers.Adam(learning_rate=0.0007, decay=0.000003)
+    adam = optimizers.Adam(learning_rate=0.0005, decay=0.000003)
     model.compile(optimizer=adam, loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
@@ -142,19 +143,29 @@ def keras_train(model_tag=None, dump=None, plot_loss=False):
         if plot_loss:
             histories = Histories()
             history = model.fit(train_X, train_y, batch_size=BATCH_SIZE,
-                                validation_split=0.1, epochs=100, callbacks=[early_stop, histories])
+                                validation_split=0.1, epochs=6, callbacks=[early_stop, histories])
             import matplotlib.pyplot as plt
             plt.plot(histories.batches, histories.losses)
             plt.title("Training history of loss vs. batches")
             plt.xlabel('Training batches')
             plt.ylabel('Loss')
-            #  plt.yscale('log')
+            batches_file = 'batches_' + model_tag
+            loss_file = 'loss_' + model_tag
+            try:
+                with open(batches_file, 'wb') as f:
+                    pickle.dump(histories.batches, f)
+                with open(loss_file, 'wb') as f:
+                    pickle.dump(histories.losses, f)
+                    #  plt.yscale('log')
+            except Exception as e:
+                print("histories save failed")
+                print(e)
             plt.show()
         else:
             model.fit(train_X, train_y, batch_size=BATCH_SIZE, validation_split=0.1, epochs=EPOCHS)
-    if DO_SAVE:
-        model.save_weights(WEIGHT_FILE)
-        model.save(MODEL_FILE)
+            if DO_SAVE:
+                model.save_weights(WEIGHT_FILE)
+                model.save(MODEL_FILE)
 
     if DO_DUMP:
         pickle_file = 'pickle_' + model_tag + '.weights'

@@ -56,21 +56,24 @@ if args.model:
     plt.show()
 else:
     data = []
-    for model in ['linux', 'mlp', 'fxdpt']:
+    _ = plt.figure(figsize=(3.5, 1.5))
+    #  for model in ['linux', 'mlp', 'fxdpt']:
+    for model in ['linux', 'mlp']:
         filename = f'imbalance_{model}.json'
         imba = read_series(filename).sample(SAMPLE_SIZE)
         print(model, len(imba))
         data.append(imba)
     #  bins = SAMPLE_SIZE // 5000
-    plot_hist2(data, label=['Linux', 'ML', 'Fxdpt'])
+    #  plot_hist2(data, label=['Linux', 'ML', 'Fxdpt'])
+    plot_hist2(data, label=['Linux', 'ML'])
     #  bins = 'auto'
     #  _, _, _ = plot_hist(data[0], bins=bins, color='tab:blue', label='Linux')
     #  plot_hist(data[1], bins=bins, color='tab:orange', label='ML')
     plt.xlim(right=max(data[0].max(), data[1].max()))
     plt.grid(axis='y', alpha=0.4)
-    plt.legend(fontsize='small')
+    plt.legend(fontsize=11)
     plt.xlabel('Max Imbalance (jobs)')
-    plt.ylabel('Frequency')
-    plt.title('Histogram of Max Imbalance of models')
+    plt.ylabel('PDF')
+    #  plt.title('Histogram of Max Imbalance of models')
 
     plt.show()

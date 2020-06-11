@@ -2,15 +2,19 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def autolabel(rects):
+def autolabel(rects, side, color):
     """
     Attach a text label above each bar displaying its height
     """
     for rect in rects:
         height = rect.get_height()
-        ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,
+        ax.text(rect.get_x() + rect.get_width()/2. + side, 1.05*height,
                 f'{height:.2f}',
-                ha='center', va='bottom', fontsize='x-small')
+                ha='center', va='bottom', fontsize=10, color=color)
+
+import matplotlib
+font = { 'size'   : 11}
+matplotlib.rc('font', **font)
 
 
 mlps = (24.8142, 38.7243, 32.1692, 26.7509, 18.9275, 4.7194, 7.4541)
@@ -37,9 +41,9 @@ ax.axes.set_xticklabels(categs)
 #  ax.set_xlabel('benchmark programs')
 ax.set_ylabel('Runtime (s)')
 ax.set_ylim(top=50)
-ax.set_title('Mean Runtime of Benchmark Programs')
+#  ax.set_title('Mean Runtime of Benchmark Programs')
 
-autolabel(rects1)
-autolabel(rects2)
-ax.legend((rects1[0], rects2[0]), ('Linux', 'ML'))
+autolabel(rects1, side=-0.1, color='blue')
+autolabel(rects2, side=0.1, color='red')
+ax.legend((rects1[0], rects2[0]), ('Linux', 'ML'), fontsize=11)
 plt.show()

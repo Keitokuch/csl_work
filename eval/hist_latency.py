@@ -1,10 +1,12 @@
 import json
+import matplotlib
 import matplotlib.pyplot as plt
 import pandas as pd
 import sys
 import numpy as np
 from scipy.stats import zscore
 import argparse
+import seaborn as sns
 
 def read_series(filename):
     with open(filename, 'r') as f:
@@ -13,6 +15,10 @@ def read_series(filename):
     filtered = np.abs(z_scores) < 2
     return series[filtered]
 
+font = {'family' : 'normal',
+        'size'   : 11}
+
+matplotlib.rc('font', **font)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-f', '--func', action='store')
@@ -43,16 +49,33 @@ def plot_hist(plt, data, bins, label, color=None, alpha=0.75):
     avg = data.mean()
     std = data.std()
     label = f'{label}\nmean={avg:.0f},std={std:.0f}'
-    n, bins, patches = plt.hist(data, bins=bins, density=True, color=color, alpha=alpha, label=label)
+    n, bins, patches = plt.hist(data, bins=bins, density=True, color=color,
+                                alpha=alpha, label=label)
     #  color='tab:red'
     plt.axvline(avg, color=color, linestyle='-', linewidth=1, alpha=alpha+0.2)
     plt.axvline(avg+std, color=color, linestyle='--', linewidth=1, alpha=alpha)
     plt.axvline(avg-std, color=color, linestyle='--', linewidth=1, alpha=alpha)
     plt.set_xlim(right=right)
     plt.set_ylim(top=top)
-    plt.legend(fontsize='small')
+    plt.legend(fontsize=11)
     plt.grid(axis='y', alpha=0.4)
     return n, bins, patches
+
+def plot_hist_line(plt, data, bins, label, color=None, alpha=0.75):
+    global right, top
+    avg = data.mean()
+    std = data.std()
+    #  label = f'{label}\nmean={avg:.0f},std={std:.0f}'
+    label = f'{label}'
+    #  n, bins, patches = plt.hist(data, bins=bins, density=True, color=color,
+    #                              alpha=alpha, label=label, histtype='step', kde=True
+    #                              )
+    sns.distplot(data, hist=False, kde=True, color=color, ax=plt, label=label)
+    #  color='tab:red'
+    plt.set_xlim(right=right)
+    plt.set_ylim(top=top)
+    plt.legend(fontsize=10)
+    plt.grid(axis='y', alpha=0.4)
 
 if args.model:
     filename = f'latency_{args.func}_{args.model}80.json'
@@ -82,45 +105,8 @@ if args.model:
     plt.ylabel('Density')
     plt.show()
 elif args.split:
-    #  right = 6000
-    #  top = 0.0015
-    #  bins = range(0, right, right // nr_bin)
-    #  FUNC_NAME = 'can_migrate_task'
-    #  fig = plt.figure(figsize=(16, 4.5))
-    #  #  fig, axes = f.subplots(1, 3, figsize=(16, 5), sharey='row')
-    #  axes = fig.subplots(nrows=1, ncols=3, sharey='row')
-    #  data = []
-    #  for model in tags:
-    #      filename = f'latency_cm_{model}{args.thread}.json'
-    #      latencies = read_series(filename) #.sample(SAMPLE_SIZE)
-    #      print(model, len(latencies))
-    #      data.append(latencies)
-    #  for i in range(3):
-    #      plot_hist(axes[i], data[i], bins=bins, color=colors[i], label=labels[i])
-    #  fig.suptitle('Latency of function {}'.format(FUNC_NAME))
-    #  axes[1].set_xlabel('Latency (ns)')
-    #  axes[0].set_ylabel('Density')
 
-    #  right = 100000
-    #  top = 0.00011
-    #  bins = range(0, right, right // nr_bin)
-    #  FUNC_NAME = 'load_balance'
-    #  fig = plt.figure(figsize=(16, 4.5))
-    #  #  fig, axes = f.subplots(1, 3, figsize=(16, 5), sharey='row')
-    #  axes = fig.subplots(nrows=1, ncols=3, sharey='row')
-    #  data = []
-    #  for model in tags:
-    #      filename = f'latency_lb_{model}{args.thread}.json'
-    #      latencies = read_series(filename) #.sample(SAMPLE_SIZE)
-    #      print(model, len(latencies))
-    #      data.append(latencies)
-    #  for i in range(3):
-    #      plot_hist(axes[i], data[i], bins=bins, color=colors[i], label=labels[i])
-    #  fig.suptitle('Latency of function {}'.format(FUNC_NAME))
-    #  axes[1].set_xlabel('Latency (ns)')
-    #  axes[0].set_ylabel('Density')
-
-    fig, axes = plt.subplots(3, 2, figsize=(10, 10), sharey='col', sharex='col')
+    fig, axes = plt.subplots(3, 2, figsize=(7, 3.5), sharey='col', sharex='col')
     #  fig.suptitle('Latency distribution of kernel load balancing functions')
     right = 6000
     top = 0.0015
@@ -162,24 +148,57 @@ elif args.split:
     plt.show()
 
 else:
+    fig, axes = plt.subplots(1, 2, figsize=(15, 5), sharey='col', sharex='col')
+    right = 6000
+    top = 0.0015
+    bins = range(0, right, right // nr_bin)
+    FUNC_NAME = 'can_migrate_task()'
     data = []
-    for model in ['linux', 'MLP', 'fxdpt']:
-        filename = f'latency_{args.func}_{model}{args.thread}.json'
+    for model in tags:
+        filename = f'latency_cm_{model}{args.thread}.json'
         latencies = read_series(filename) #.sample(SAMPLE_SIZE)
         print(model, len(latencies))
         data.append(latencies)
-    #  right = max(map(max, data))
-    bins = range(0, right, right // nr_bin)
-    plot_hist(plt, data[0], bins=bins, color='tab:blue', label='Linux')
-    plot_hist(plt, data[1], bins=bins, color='tab:orange', label='MLP Floating Point')
-    plot_hist(plt, data[2], bins=bins, color='yellow', label='MLP Fixed Point')
-    #  plt.hist(data, bins=bins, label=['Linux', 'MLP', 'FixedPt'], density=True)
-    #  plt.xlim(right=max(data[0].max(), data[1].max()))
-    plt.legend(fontsize='small')
-    plt.xlabel('Latency (ns)')
-    plt.ylabel('Density')
-    #  plt.title('Latency of function {} with {}'.format(FUNC_NAME, 'Linux'))
-    #  plt.title('Latency of function {} with {}'.format(FUNC_NAME, 'MLP in Floating Point'))
-    plt.title('Latency of function {} with {}'.format(FUNC_NAME, 'MLP in Fixed Point'))
+    for i in range(3):
+        plot_hist_line(axes[0], data[i], bins=bins, color=colors[i], label=labels[i])
+        axes[0].set_ylabel('PDF')
+    axes[0].set_xlabel('Latency (ns)')
+    axes[0].set_title(FUNC_NAME)
 
+    right = 100000
+    top = 0.00011
+    bins = range(0, right, right // nr_bin)
+    FUNC_NAME = 'load_balance()'
+    data = []
+    for model in tags:
+        filename = f'latency_lb_{model}{args.thread}.json'
+        latencies = read_series(filename) #.sample(SAMPLE_SIZE)
+        print(model, len(latencies))
+        data.append(latencies)
+    for i in range(3):
+        plot_hist_line(axes[1], data[i], bins=bins, color=colors[i], label=labels[i])
+    axes[1].set_xlabel('Latency (ns)')
+    axes[1].set_title(FUNC_NAME)
     plt.show()
+
+    #  data = []
+    #  for model in ['linux', 'MLP', 'fxdpt']:
+    #      filename = f'latency_{args.func}_{model}{args.thread}.json'
+    #      latencies = read_series(filename) #.sample(SAMPLE_SIZE)
+    #      print(model, len(latencies))
+    #      data.append(latencies)
+    #  #  right = max(map(max, data))
+    #  bins = range(0, right, right // nr_bin)
+    #  plot_hist(plt, data[0], bins=bins, color='tab:blue', label='Linux')
+    #  plot_hist(plt, data[1], bins=bins, color='tab:orange', label='MLP Floating Point')
+    #  plot_hist(plt, data[2], bins=bins, color='yellow', label='MLP Fixed Point')
+    #  #  plt.hist(data, bins=bins, label=['Linux', 'MLP', 'FixedPt'], density=True)
+    #  #  plt.xlim(right=max(data[0].max(), data[1].max()))
+    #  plt.legend(fontsize='small')
+    #  plt.xlabel('Latency (ns)')
+    #  plt.ylabel('Density')
+    #  #  plt.title('Latency of function {} with {}'.format(FUNC_NAME, 'Linux'))
+    #  #  plt.title('Latency of function {} with {}'.format(FUNC_NAME, 'MLP in Floating Point'))
+    #  plt.title('Latency of function {} with {}'.format(FUNC_NAME, 'MLP in Fixed Point'))
+
+    #  plt.show()

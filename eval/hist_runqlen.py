@@ -5,6 +5,8 @@ import sys
 import numpy as np
 from scipy.stats import zscore
 import argparse
+import matplotlib
+import seaborn as sns
 
 def read_dict(filename):
     with open(filename, 'r') as f:
@@ -14,6 +16,8 @@ def read_dict(filename):
     #  hist_runqlen = {int(k): v for k, v in raw_dict.items() if v >= 10}
     return hist_runqlen
 
+font = { 'size'   : 11}
+matplotlib.rc('font', **font)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', action='store')
@@ -56,6 +60,7 @@ if args.model:
     plt.title('Histogram of Max Imbalance')
     plt.show()
 else:
+    _ = plt.figure(figsize=(3.5, 2))
     hists = []
     for model in ['linux-fx', 'fxdpt']:
         filename = f'runqlen_{model}.json'
@@ -66,17 +71,36 @@ else:
     #  bins = SAMPLE_SIZE // 5000
     #  bins = 'auto'
     alpha = 0.9
-    plt.bar(bins, hists[0].values(), width, color='tab:blue', alpha=alpha, label='Linux')
-    plt.bar([k + width for k in hists[1].keys()], hists[1].values(), width,
-            color='tab:orange', alpha=alpha, label='ML')
+    colors = ['tab:blue', 'tab:orange']
+    labels = ['Linux', 'ML']
+    print(bins)
+    print(hists[0].values())
+    maxbin = 45
+    lists = [[0 for _ in range(maxbin)], [0 for _ in range(maxbin)]]
+    for i in [0, 1]:
+        for k, v in hists[i].items():
+            lists[i][k] = v
+
+    print(hists[0].values())
+    #  hists = sorted(hists)
+    #  exit()
+    for i in [0, 1]:
+        bins = sorted(hists[i])
+        cnts = [hists[i][j] for j in bins]
+        plt.plot(bins, cnts, color=colors[i], label=labels[i])
+    #  sns.distplot(lists[0], hist=False, kde=True, color=colors[0], label=labels[0])
+    #  sns.distplot(lists[1], hist=False, kde=True, color=colors[1], label=labels[1])
+    #  plt.bar(bins, hists[0].values(), width, color='tab:blue', alpha=alpha, label='Linux')
+    #  plt.bar([k + width for k in hists[1].keys()], hists[1].values(), width,
+    #          color='tab:orange', alpha=alpha, label='ML')
 
     #  plt.hist(*hists[1].items(), bins=bins, color='tab:orange', label='ML')
     #  plt.xlim(right=max(data[0].max(), data[1].max()))
     plt.grid(axis='y', alpha=0.4)
     plt.yscale('log')
-    plt.legend(fontsize='small')
+    plt.legend(fontsize=10)
     plt.xlabel('Number of Runnable Jobs')
-    plt.ylabel('Density')
-    plt.title('Distribution of Run-queue Length')
+    plt.ylabel('PDF')
+    #  plt.title('Distribution of Run-queue Length')
 
     plt.show()
