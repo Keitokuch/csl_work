@@ -1,5 +1,6 @@
 import json
 import matplotlib.pyplot as plt
+import matplotlib
 import pandas as pd
 import sys
 import numpy as np
@@ -13,6 +14,10 @@ def read_series(filename):
     filtered = np.abs(z_scores) < 3
     return series[filtered]
 
+from plot_config import font
+matplotlib.rc('font', **font)
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', action='store')

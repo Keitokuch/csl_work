@@ -16,8 +16,10 @@ def read_dict(filename):
     #  hist_runqlen = {int(k): v for k, v in raw_dict.items() if v >= 10}
     return hist_runqlen
 
-font = { 'size'   : 11}
+from plot_config import font
 matplotlib.rc('font', **font)
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-m', '--model', action='store')
@@ -98,7 +100,7 @@ else:
     #  plt.xlim(right=max(data[0].max(), data[1].max()))
     plt.grid(axis='y', alpha=0.4)
     plt.yscale('log')
-    plt.legend(fontsize=10)
+    plt.legend(fontsize=font['size'] - 1)
     plt.xlabel('Number of Runnable Jobs')
     plt.ylabel('PDF')
     #  plt.title('Distribution of Run-queue Length')
