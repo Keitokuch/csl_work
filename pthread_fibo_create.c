@@ -35,7 +35,10 @@ int main(int argc, char *argv[]) {
 
 void *fibo(void *x) {
     unsigned long n = (unsigned long)x;
-    if (n <= 1) {
+	if (n == 0) {
+		return (void *)0;
+	}
+    if (n == 1) {
         return (void *)1;
     }
     void *add_1, *add_2;
